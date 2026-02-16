@@ -65,6 +65,8 @@ input[type="number"], input[type="text"] {
     margin-bottom:6px;
     color:#333;
 }
+
+.historyBtn{ background:#ff7a18; color:white; margin-top:10px; padding:8px; border-radius:8px; cursor:pointer; }
 </style>
 </head>
 
@@ -125,6 +127,14 @@ input[type="number"], input[type="text"] {
         <b>📉 Total Not Eating Count:</b>
         <div id="totalNotEating"></div>
     </div>
+
+    <button class="historyBtn" onclick="toggleHistory()">📚 View Last 7 Days History</button>
+
+    <div id="historyPanel" class="hidden sectionBox">
+        <b>🗂️ History (Auto deletes after 7 days)</b>
+        <div id="historyData"></div>
+        <button onclick="clearHistory()">🗑️ Clear All History</button>
+    </div>
 </div>
 
 <div id="lockMsg" class="lock"></div>
@@ -132,54 +142,74 @@ input[type="number"], input[type="text"] {
 
 <script>
 let data = JSON.parse(localStorage.getItem("chapatiData")) || [];
+let history = JSON.parse(localStorage.getItem("chapatiHistory")) || [];
 let isAdmin = false;
 const ADMIN_PASSWORD = "5678";
 
-/* ⏰ TIME LOCK = 6:30 PM */
-function isLocked(){
+/* ⏰ LOCK TIME = 6:30 PM */
+function isLocked(){ 
     const now = new Date();
     const lockTime = new Date();
-    lockTime.setHours(18,30,0); // 6:30 PM
+    lockTime.setHours(18,30,0);
     return now >= lockTime;
 }
 
-/* 🍽️ EATING (Room No + Count, Edit only) */
-function eatYes(){
-    if(isLocked()){ alert("🔒 Time up!"); return; }
+/* CLEAN HISTORY >7 DAYS */
+function cleanHistory(){
+    const now = new Date();
+    history = history.filter(h=>{
+        const d = new Date(h.date);
+        const diff = (now - d)/(1000*60*60*24);
+        return diff <= 7;
+    });
+    localStorage.setItem("chapatiHistory", JSON.stringify(history));
+}
 
-    const room = prompt("Enter your room number:");
-    if(!room || isNaN(room) || parseInt(room)<=0) return alert("Enter valid numeric room number ❗");
-
-    const count = prompt("How many people are eating from this room?");
-    if(!count || isNaN(count) || parseInt(count)<=0) return alert("Enter valid people count ❗");
-
-    if(data.find(d=>d.type==="eating" && d.room==room)){
-        alert("Your room already submitted 🏠");
-        return;
+/* SAVE TODAY TO HISTORY */
+function saveToHistory(){
+    const today = new Date().toDateString();
+    let entry = history.find(h=>h.date===today);
+    if(!entry){
+        entry = {date: today, data: []};
+        history.push(entry);
     }
+    entry.data = JSON.parse(JSON.stringify(data));
+    localStorage.setItem("chapatiHistory", JSON.stringify(history));
+    cleanHistory();
+}
+
+/* 🍽️ EATING */
+function eatYes(){
+    if(isLocked()){ alert("Sorry, time up 💗"); return; }
+    const room = prompt("Enter your room number:");
+    const count = prompt("How many people are eating from this room?");
+    if(!room || !count || count<=0) return alert("Invalid input");
+    if(data.find(d=>d.type==="eating" && d.room==room)) return alert("Room already submitted");
 
     data.push({type:"eating",room:parseInt(room),count:parseInt(count)});
     localStorage.setItem("chapatiData", JSON.stringify(data));
+    saveToHistory();
     updateUI();
 }
 
 /* ❌ NOT EATING */
 function showInput(){
-    if(isLocked()){ alert("🔒 Time up!"); return; }
+    if(isLocked()) return;
     document.getElementById("nameBox").classList.remove("hidden");
 }
+
 function addNotEating(){
-    if(isLocked()){ alert("🔒 Time up!"); return; }
     const room = document.getElementById("roomInput").value.trim();
     const name = document.getElementById("nameInput").value.trim();
-    if(!room || isNaN(room) || parseInt(room)<=0) return alert("Enter valid numeric room number ❗");
-    if(!name) return alert("Enter name ❗");
+    if(!room || isNaN(room) || parseInt(room)<=0) return alert("Enter valid room");
+    if(!name) return alert("Enter name");
 
     data.push({type:"not_eating",room:parseInt(room),name});
     localStorage.setItem("chapatiData", JSON.stringify(data));
     document.getElementById("roomInput").value="";
     document.getElementById("nameInput").value="";
     document.getElementById("nameBox").classList.add("hidden");
+    saveToHistory();
     updateUI();
 }
 
@@ -193,24 +223,22 @@ function adminLogin(){
     } else alert("Wrong password ❌");
 }
 
-/* ✏️ EDIT Eating */
+/* EDIT / DELETE */
 function editEating(index){
-    if(isLocked()){ alert("🔒 Time up!"); return; }
+    if(isLocked()){ alert("Sorry, time up 💗"); return; }
     let item = data.filter(d=>d.type==="eating")[index];
     let room = prompt("Edit room number:", item.room);
     if(!room || isNaN(room) || parseInt(room)<=0) return alert("Enter valid room number ❗");
     let count = prompt("Edit count:", item.count);
     if(!count || isNaN(count) || parseInt(count)<=0) return alert("Enter valid count ❗");
-
     item.room = parseInt(room);
     item.count = parseInt(count);
     localStorage.setItem("chapatiData", JSON.stringify(data));
     updateUI();
 }
 
-/* ✏️/🗑 EDIT/DELETE Not Eating */
 function editNotEating(index){
-    if(isLocked()){ alert("🔒 Time up!"); return; }
+    if(isLocked()){ alert("Sorry, time up 💗"); return; }
     let item = data.filter(d=>d.type==="not_eating").sort((a,b)=>a.room-b.room)[index];
     let room = prompt("Edit room number:", item.room);
     if(!room || isNaN(room) || parseInt(room)<=0) return alert("Enter valid room number ❗");
@@ -221,8 +249,9 @@ function editNotEating(index){
     localStorage.setItem("chapatiData", JSON.stringify(data));
     updateUI();
 }
+
 function deleteNotEating(index){
-    if(isLocked()){ alert("🔒 Time up!"); return; }
+    if(isLocked()){ alert("Sorry, time up 💗"); return; }
     let notEatingItems = data.filter(d=>d.type==="not_eating").sort((a,b)=>a.room-b.room);
     let realIndex = data.indexOf(notEatingItems[index]);
     if(confirm("Delete this entry?")){
@@ -232,54 +261,85 @@ function deleteNotEating(index){
     }
 }
 
+/* HISTORY PANEL */
+function toggleHistory(){
+    document.getElementById("historyPanel").classList.toggle("hidden");
+    renderHistory();
+}
+
+function renderHistory(){
+    let html="";
+    history.sort((a,b)=> new Date(b.date) - new Date(a.date));
+    history.forEach(h=>{
+        html+=`<b>📅 ${h.date}</b><br>`;
+        let totalChapati=0, notEatNames=[];
+        h.data.forEach(d=>{
+            if(d.type==="eating") totalChapati+=d.count;
+            if(d.type==="not_eating") notEatNames.push(d.name);
+        });
+        html += `🍽️ Chapatis: ${totalChapati}<br>`;
+        html += `❌ Not Eating Count: ${notEatNames.length}<br>`;
+        if(notEatNames.length>0){
+            html += `👤 Not Eating Names:<br>`;
+            notEatNames.forEach(n=> html += `• ${n}<br>`);
+        } else { html += `👤 Not Eating Names: None<br>`;}
+        html += `<hr>`;
+    });
+    document.getElementById("historyData").innerHTML = html || "No history";
+}
+
+function clearHistory(){
+    if(confirm("Delete all history?")){
+        history=[];
+        localStorage.setItem("chapatiHistory","[]");
+        renderHistory();
+    }
+}
+
 /* UI UPDATE */
 function updateUI(){
-    let eatingHtml = "";
-    let notEatingHtml = "";
-    let totalChapati = 0;
-
-    // Eating sorted
+    let eatingHtml="", notEatingHtml="", totalChapati=0, totalNotEating=0, notEatNames=[];
     let eatingRooms = data.filter(d=>d.type==="eating").sort((a,b)=>a.room-b.room);
     eatingRooms.forEach((d,i)=>{
-        totalChapati += d.count;
-        eatingHtml += `❤️ Room ${d.room} : ${d.count} people 
-            <button class="editBtn" onclick="editEating(${i})">Edit</button><br>`;
+        totalChapati+=d.count;
+        eatingHtml+=`❤️ Room ${d.room}: ${d.count} 
+            <button class="editBtn" onclick="editEating(${i})">✏️ Edit</button><br>`;
     });
-
-    // Not Eating sorted
     let notEatingRooms = data.filter(d=>d.type==="not_eating").sort((a,b)=>a.room-b.room);
     notEatingRooms.forEach((d,i)=>{
-        notEatingHtml += `❌ Room ${d.room} - ${d.name} 
-            <button class="editBtn" onclick="editNotEating(${i})">Edit</button>
-            <button class="deleteBtn" onclick="deleteNotEating(${i})">Delete</button><br>`;
+        totalNotEating++;
+        notEatNames.push(d.name);
+        notEatingHtml+=`❌ Room ${d.room} - ${d.name} 
+            <button class="editBtn" onclick="editNotEating(${i})">✏️ Edit</button>
+            <button class="deleteBtn" onclick="deleteNotEating(${i})">🗑️ Delete</button><br>`;
     });
-
     document.getElementById("eatingRooms").innerHTML = eatingHtml || "No eating entries yet ❤️";
     document.getElementById("notEatingRooms").innerHTML = notEatingHtml || "No not eating entries yet ❌";
 
     if(isAdmin){
-        document.getElementById("totalChapati").innerText = totalChapati || 0;
-        document.getElementById("roomWise").innerHTML = eatingRooms.map(d=>`Room ${d.room} : ${d.count}`).join("<br>") || "No data";
-        document.getElementById("notEatingNames").innerHTML = notEatingRooms.map(d=>`Room ${d.room} - ${d.name}`).join("<br>") || "No data";
-        document.getElementById("totalNotEating").innerText = notEatingRooms.length;
+        document.getElementById("totalChapati").innerText = totalChapati;
+        document.getElementById("roomWise").innerHTML = eatingRooms.map(d=>`Room ${d.room}: ${d.count}`).join("<br>") || "No data";
+        document.getElementById("notEatingNames").innerHTML = notEatNames.join("<br>") || "No data";
+        document.getElementById("totalNotEating").innerText = totalNotEating;
     }
-
-    document.getElementById("lockMsg").innerText = isLocked() 
-        ? "🔒 Submissions closed for today 🍱" 
-        : "✅ Submissions open till 6:30 PM ❤️";
 }
 
 /* DATE TIME */
 function updateDateTime(){
-    const now = new Date();
-    document.getElementById("date").innerText = "📅 "+now.toDateString();
-    document.getElementById("time").innerText = "🕒 "+now.toLocaleTimeString();
+    const now=new Date();
+    document.getElementById("date").innerText="📅 "+now.toDateString();
+    document.getElementById("time").innerText="🕒 "+now.toLocaleTimeString();
+    document.getElementById("lockMsg").innerText = isLocked() 
+        ? "🔒 Submissions closed for today 💗" 
+        : "✅ Submissions open till 6:30 PM ❤️";
 }
 
 setInterval(updateDateTime,1000);
+cleanHistory();
+saveToHistory();
 updateUI();
 updateDateTime();
-
 </script>
+
 </body>
 </html>
