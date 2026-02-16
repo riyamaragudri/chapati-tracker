@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hostel Chapati Tracker</title>
+
+<style>
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#c3ecff,#fce1ff);
+    padding:20px;
+}
+.container {
+    max-width:420px;
+    margin:auto;
+    background:#ffffff;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.15);
+    text-align:center;
+}
+.datetime { font-size:14px; color:#555; margin-bottom:15px; }
+
+button {
+    padding:12px;
+    margin:8px 0;
+    width:100%;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+    cursor:pointer;
+}
+.yes { background:#4CAF50; color:white; }
+.no { background:#f44336; color:white; }
+.admin { background:#6a5acd; color:white; }
+
+input {
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+
+.lock { color:red; font-weight:bold; margin-top:10px; }
+.hidden { display:none; }
+
+/* Popup */
+.popup-overlay{
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.4);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:999;
+}
+.popup{
+    background:white;
+    padding:25px;
+    border-radius:20px;
+    text-align:center;
+    width:300px;
+}
+.emoji{ font-size:40px; }
+
+.adminBox{
+    background:#f5f5ff;
+    padding:10px;
+    border-radius:10px;
+    margin-top:10px;
+    text-align:left;
+    font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>🍽️ Chapati Tracker</h2>
+
+<div class="datetime">
+    <div id="date"></div>
+    <div id="time"></div>
+</div>
+
+<button class="yes" onclick="eatYes()">I will eat chapati</button>
+<button class="no" onclick="showInput()">I will NOT eat chapati</button>
+
+<!-- NOT EATING INPUT -->
+<div id="nameBox" class="hidden">
+    <input type="text" id="nameInput" placeholder="Enter your name">
+    <button onclick="addNotEating()">Submit</button>
+</div>
+
+<!-- ADMIN -->
+<button class="admin" onclick="adminLogin()">Admin Login</button>
+
+<div id="adminPanel" class="hidden">
+    <h3>👑 Admin Panel</h3>
+
+    <div class="adminBox">
+        <b>📊 Total Chapatis Needed Today:</b>
+        <div id="totalChapati"></div>
+    </div>
+
+    <div class="adminBox">
+        <b>🍽️ Room-wise Eating Count:</b>
+        <div id="roomWise"></div>
+    </div>
+
+    <div class="adminBox">
+        <b>❌ Not Eating (Names):</b>
+        <div id="notEatingNames"></div>
+    </div>
+
+    <div class="adminBox">
+        <b>📉 Total Not Eating Count:</b>
+        <div id="totalNotEating"></div>
+    </div>
+</div>
+
+<div id="lockMsg" class="lock"></div>
+</div>
+
+<!-- TIME UP POPUP -->
+<div class="popup-overlay" id="popup">
+    <div class="popup">
+        <div class="emoji">🥺</div>
+        <h3>Sorry... Time’s Up!</h3>
+        <p>Submissions closed after <b>7:30 PM</b> ⏰<br>
+        Please try again tomorrow 💕</p>
+        <button onclick="closePopup()">Okay 💗</button>
+    </div>
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("chapatiData")) || [];
+let isAdmin = false;
+
+const ADMIN_PASSWORD = "1234";
+
+/* ⏰ TIME LOCK = 7:30 PM */
+function isLocked(){
+    const now = new Date();
+    const lockTime = new Date();
+    lockTime.setHours(19,30,0);
+    return now >= lockTime;
+}
+
+/* POPUP */
+function showPopup(){ document.getElementById("popup").style.display = "flex"; }
+function closePopup(){ document.getElementById("popup").style.display = "none"; }
+
+/* 🍽️ EATING (ROOM + TOTAL PEOPLE COUNT) */
+function eatYes(){
+    if(isLocked()){ showPopup(); return; }
+
+    const room = prompt("Enter your room number:");
+    const count = prompt("How many people are eating from this room?");
+
+    if(!room || !count){
+        alert("All fields required ❗");
+        return;
+    }
+
+    if(count <= 0){
+        alert("Count must be more than 0 ❌");
+        return;
+    }
+
+    // Block duplicate room
+    const exists = data.find(d => d.type==="eating" && d.room == room);
+
+    if(exists){
+        alert("🥺 Your room counting is already submitted 🏠💗\n\nIf any issue, contact mess monitor before 7:30 PM ⏰");
+        return;
+    }
+
+    data.push({
+        type: "eating",
+        room: room,
+        count: parseInt(count)
+    });
+
+    localStorage.setItem("chapatiData", JSON.stringify(data));
+    updateUI();
+
+    alert("Room " + room + " submitted successfully 🍽️✅");
+}
+
+/* ❌ NOT EATING (NAME ONLY) */
+function showInput(){
+    if(isLocked()){ showPopup(); return; }
+    document.getElementById("nameBox").classList.remove("hidden");
+}
+
+function addNotEating(){
+    if(isLocked()){ showPopup(); return; }
+
+    const name = document.getElementById("nameInput").value.trim();
+    if(name===""){
+        alert("Enter name ❗");
+        return;
+    }
+
+    data.push({
+        type: "not_eating",
+        name: name
+    });
+
+    localStorage.setItem("chapatiData", JSON.stringify(data));
+    document.getElementById("nameInput").value="";
+    document.getElementById("nameBox").classList.add("hidden");
+
+    updateUI();
+    alert("Submitted successfully ✅");
+}
+
+/* 👑 ADMIN */
+function adminLogin(){
+    const pass = prompt("Enter admin password:");
+    if(pass === ADMIN_PASSWORD){
+        isAdmin = true;
+        document.getElementById("adminPanel").classList.remove("hidden");
+        updateUI();
+        alert("Admin mode enabled 👑");
+    } else {
+        alert("Wrong password ❌");
+    }
+}
+
+/* UI UPDATE */
+function updateUI(){
+    let totalChapati = 0;
+    let notEatCount = 0;
+
+    let roomHtml = "";
+    let notEatingNames = [];
+
+    data.forEach(d=>{
+        if(d.type==="eating"){
+            totalChapati += d.count;
+            roomHtml += `Room ${d.room} : ${d.count} people<br>`;
+        }
+        if(d.type==="not_eating"){
+            notEatCount++;
+            notEatingNames.push(d.name);
+        }
+    });
+
+    if(isAdmin){
+        document.getElementById("totalChapati").innerText = totalChapati || 0;
+        document.getElementById("roomWise").innerHTML = roomHtml || "No data";
+        document.getElementById("notEatingNames").innerHTML = notEatingNames.map(n=>"• "+n).join("<br>") || "No data";
+        document.getElementById("totalNotEating").innerText = notEatCount;
+    }
+}
+
+/* DATE TIME */
+function updateDateTime(){
+    const now = new Date();
+    document.getElementById("date").innerText = "📅 " + now.toDateString();
+    document.getElementById("time").innerText = "🕒 " + now.toLocaleTimeString();
+
+    if(isLocked()){
+        document.getElementById("lockMsg").innerText = "🔒 Submissions closed for today";
+    } else {
+        document.getElementById("lockMsg").innerText = "✅ Submissions open till 7:30 PM";
+    }
+}
+
+setInterval(updateDateTime,1000);
+updateUI();
+updateDateTime();
+</script>
+
+</body>
+</html>
