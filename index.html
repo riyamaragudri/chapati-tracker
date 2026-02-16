@@ -7,35 +7,40 @@
 <style>
 body {
     font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg,#c3ecff,#fce1ff);
+    background: linear-gradient(135deg,#9ad1f1,#f8c1dc);
     padding:20px;
 }
 .container {
-    max-width:420px;
+    max-width:500px;
     margin:auto;
-    background:#ffffff;
-    padding:20px;
-    border-radius:15px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.15);
+    background:#ffffffcc;
+    padding:25px;
+    border-radius:20px;
+    box-shadow:0 8px 25px rgba(0,0,0,0.2);
     text-align:center;
 }
 .datetime { font-size:14px; color:#555; margin-bottom:15px; }
 
 button {
     padding:12px;
-    margin:8px 0;
+    margin:6px 0;
     width:100%;
     border:none;
-    border-radius:8px;
+    border-radius:10px;
     font-size:16px;
     cursor:pointer;
+    transition: all 0.2s ease;
 }
-.yes { background:#4CAF50; color:white; }
-.no { background:#f44336; color:white; }
-.admin { background:#6a5acd; color:white; }
-.historyBtn{ background:#ff7a18; color:white; }
+button:hover{ opacity:0.9; }
 
-input {
+.yes { background:#6fcf97; color:#1d3557; }
+.no { background:#f78da7; color:#6d4c41; }
+.admin { background:#b084cc; color:#3d1766; }
+
+.editBtn{ background:#ffd97d; color:#6b4226; font-size:12px; padding:5px 10px; border-radius:6px; margin-left:5px; cursor:pointer; }
+.deleteBtn{ background:#ff7b7b; color:#690000; font-size:12px; padding:5px 10px; border-radius:6px; margin-left:5px; cursor:pointer; }
+
+input[type="number"], input[type="text"] {
     width:100%;
     padding:10px;
     margin:8px 0;
@@ -43,16 +48,22 @@ input {
     border:1px solid #ccc;
 }
 
-.lock { color:red; font-weight:bold; margin-top:10px; }
+.lock { color:#e63946; font-weight:bold; margin-top:10px; }
 .hidden { display:none; }
 
-.adminBox{
-    background:#f5f5ff;
-    padding:10px;
-    border-radius:10px;
-    margin-top:10px;
+.sectionBox{
+    background:#f0f4f8;
+    padding:12px;
+    border-radius:12px;
+    margin-top:15px;
     text-align:left;
     font-size:14px;
+}
+.sectionTitle{
+    font-weight:bold;
+    font-size:16px;
+    margin-bottom:6px;
+    color:#333;
 }
 </style>
 </head>
@@ -60,7 +71,7 @@ input {
 <body>
 
 <div class="container">
-<h2>🍽️ Chapati Tracker</h2>
+<h2>🍽️ Chapati Tracker </h2>
 
 <div class="datetime">
     <div id="date"></div>
@@ -70,32 +81,49 @@ input {
 <button class="yes" onclick="eatYes()">I will eat chapati</button>
 <button class="no" onclick="showInput()">I will NOT eat chapati</button>
 
+<!-- NOT EATING INPUT -->
 <div id="nameBox" class="hidden">
+    <input type="number" id="roomInput" placeholder="Enter your room number" min="1">
     <input type="text" id="nameInput" placeholder="Enter your name">
     <button onclick="addNotEating()">Submit</button>
 </div>
 
-<div class="adminBox">
-    <b>🏠 Rooms Submitted ❤️</b>
-    <div id="publicRooms"></div>
+<!-- EATING SECTION -->
+<div class="sectionBox">
+    <div class="sectionTitle">🍽️ Eating Entries</div>
+    <div id="eatingRooms"></div>
 </div>
 
+<!-- NOT EATING SECTION -->
+<div class="sectionBox">
+    <div class="sectionTitle">❌ Not Eating Entries</div>
+    <div id="notEatingRooms"></div>
+</div>
+
+<!-- ADMIN PANEL -->
 <button class="admin" onclick="adminLogin()">Admin Login</button>
 
 <div id="adminPanel" class="hidden">
-    <h3>🥑 Admin Panel</h3>
+    <h3>🥑Admin Panel</h3>
 
-    <div class="adminBox"><b>📊 Total Chapatis:</b><div id="totalChapati"></div></div>
-    <div class="adminBox"><b>🍽️ Room-wise:</b><div id="roomWise"></div></div>
-    <div class="adminBox"><b>❌ Not Eating:</b><div id="notEatingNames"></div></div>
-    <div class="adminBox"><b>📉 Total Not Eating:</b><div id="totalNotEating"></div></div>
+    <div class="sectionBox">
+        <b>📊 Total Chapatis Needed Today ❤️:</b>
+        <div id="totalChapati"></div>
+    </div>
 
-    <button class="historyBtn" onclick="toggleHistory()">📚 View Last 7 Days History</button>
+    <div class="sectionBox">
+        <b>🍽️ Room-wise Eating Count:</b>
+        <div id="roomWise"></div>
+    </div>
 
-    <div id="historyPanel" class="hidden adminBox">
-        <b>🗂️ History (Auto deletes after 7 days)</b>
-        <div id="historyData"></div>
-        <button onclick="clearHistory()">🗑️ Clear All History</button>
+    <div class="sectionBox">
+        <b>❌ Not Eating (Room + Name):</b>
+        <div id="notEatingNames"></div>
+    </div>
+
+    <div class="sectionBox">
+        <b>📉 Total Not Eating Count:</b>
+        <div id="totalNotEating"></div>
     </div>
 </div>
 
@@ -104,78 +132,52 @@ input {
 
 <script>
 let data = JSON.parse(localStorage.getItem("chapatiData")) || [];
-let history = JSON.parse(localStorage.getItem("chapatiHistory")) || [];
 let isAdmin = false;
-
 const ADMIN_PASSWORD = "5678";
 
-/* ⏰ LOCK TIME = 6:30 PM */
+/* ⏰ TIME LOCK = 6:30 PM */
 function isLocked(){
     const now = new Date();
     const lockTime = new Date();
-    lockTime.setHours(18,30,0);  // 6:30 PM
+    lockTime.setHours(18,30,0); // 6:30 PM
     return now >= lockTime;
 }
 
-/* DATE STRING */
-function todayStr(){
-    return new Date().toISOString().split("T")[0];
-}
-
-/* AUTO DELETE > 7 DAYS */
-function cleanHistory(){
-    const now = new Date();
-    history = history.filter(h=>{
-        const d = new Date(h.date);
-        const diff = (now - d)/(1000*60*60*24);
-        return diff <= 7;
-    });
-    localStorage.setItem("chapatiHistory", JSON.stringify(history));
-}
-
-/* SAVE TODAY TO HISTORY */
-function saveToHistory(){
-    const today = todayStr();
-    let entry = history.find(h=>h.date===today);
-    if(!entry){
-        entry = {date: today, data: []};
-        history.push(entry);
-    }
-    entry.data = JSON.parse(JSON.stringify(data));
-    localStorage.setItem("chapatiHistory", JSON.stringify(history));
-    cleanHistory();
-}
-
-/* 🍽️ EATING */
+/* 🍽️ EATING (Room No + Count, Edit only) */
 function eatYes(){
-    if(isLocked()) return alert("🔒 Time up");
+    if(isLocked()){ alert("🔒 Time up!"); return; }
 
-    const room = prompt("Enter room:");
-    const count = prompt("How many people?");
-    if(!room || !count || count<=0) return alert("Invalid input");
+    const room = prompt("Enter your room number:");
+    if(!room || isNaN(room) || parseInt(room)<=0) return alert("Enter valid numeric room number ❗");
 
-    if(data.find(d=>d.type==="eating" && d.room==room)) 
-        return alert("Room already submitted");
+    const count = prompt("How many people are eating from this room?");
+    if(!count || isNaN(count) || parseInt(count)<=0) return alert("Enter valid people count ❗");
+
+    if(data.find(d=>d.type==="eating" && d.room==room)){
+        alert("Your room already submitted 🏠");
+        return;
+    }
 
     data.push({type:"eating",room:parseInt(room),count:parseInt(count)});
     localStorage.setItem("chapatiData", JSON.stringify(data));
-    saveToHistory();
     updateUI();
 }
 
 /* ❌ NOT EATING */
 function showInput(){
-    if(isLocked()) return;
+    if(isLocked()){ alert("🔒 Time up!"); return; }
     document.getElementById("nameBox").classList.remove("hidden");
 }
-
 function addNotEating(){
+    if(isLocked()){ alert("🔒 Time up!"); return; }
+    const room = document.getElementById("roomInput").value.trim();
     const name = document.getElementById("nameInput").value.trim();
-    if(!name) return alert("Enter name");
+    if(!room || isNaN(room) || parseInt(room)<=0) return alert("Enter valid numeric room number ❗");
+    if(!name) return alert("Enter name ❗");
 
-    data.push({type:"not_eating",name});
+    data.push({type:"not_eating",room:parseInt(room),name});
     localStorage.setItem("chapatiData", JSON.stringify(data));
-    saveToHistory();
+    document.getElementById("roomInput").value="";
     document.getElementById("nameInput").value="";
     document.getElementById("nameBox").classList.add("hidden");
     updateUI();
@@ -185,100 +187,99 @@ function addNotEating(){
 function adminLogin(){
     const pass = prompt("Enter admin password:");
     if(pass===ADMIN_PASSWORD){
-        isAdmin=true;
+        isAdmin = true;
         document.getElementById("adminPanel").classList.remove("hidden");
         updateUI();
-    } else alert("Wrong password");
+    } else alert("Wrong password ❌");
 }
 
-/* 📚 HISTORY PANEL */
-function toggleHistory(){
-    document.getElementById("historyPanel").classList.toggle("hidden");
-    renderHistory();
+/* ✏️ EDIT Eating */
+function editEating(index){
+    if(isLocked()){ alert("🔒 Time up!"); return; }
+    let item = data.filter(d=>d.type==="eating")[index];
+    let room = prompt("Edit room number:", item.room);
+    if(!room || isNaN(room) || parseInt(room)<=0) return alert("Enter valid room number ❗");
+    let count = prompt("Edit count:", item.count);
+    if(!count || isNaN(count) || parseInt(count)<=0) return alert("Enter valid count ❗");
+
+    item.room = parseInt(room);
+    item.count = parseInt(count);
+    localStorage.setItem("chapatiData", JSON.stringify(data));
+    updateUI();
 }
 
-function renderHistory(){
-    let html="";
-    history.sort((a,b)=> new Date(b.date)-new Date(a.date));
-
-    history.forEach(h=>{
-        html+=`<b>📅 ${h.date}</b><br>`;
-
-        let chapatiTotal = 0;
-        let notEatNames = [];
-
-        h.data.forEach(d=>{
-            if(d.type==="eating"){
-                chapatiTotal += d.count;
-            }
-            if(d.type==="not_eating"){
-                notEatNames.push(d.name);
-            }
-        });
-
-        html += `🍽️ Chapatis: ${chapatiTotal}<br>`;
-        html += `❌ Not Eating Count: ${notEatNames.length}<br>`;
-
-        if(notEatNames.length > 0){
-            html += `👤 Not Eating Names:<br>`;
-            notEatNames.forEach(n=>{
-                html += `• ${n}<br>`;
-            });
-        } else {
-            html += `👤 Not Eating Names: None<br>`;
-        }
-
-        html += `<hr>`;
-    });
-
-    document.getElementById("historyData").innerHTML = html || "No history";
+/* ✏️/🗑 EDIT/DELETE Not Eating */
+function editNotEating(index){
+    if(isLocked()){ alert("🔒 Time up!"); return; }
+    let item = data.filter(d=>d.type==="not_eating").sort((a,b)=>a.room-b.room)[index];
+    let room = prompt("Edit room number:", item.room);
+    if(!room || isNaN(room) || parseInt(room)<=0) return alert("Enter valid room number ❗");
+    let name = prompt("Edit name:", item.name);
+    if(!name) return alert("Enter name ❗");
+    item.room = parseInt(room);
+    item.name = name;
+    localStorage.setItem("chapatiData", JSON.stringify(data));
+    updateUI();
 }
-
-function clearHistory(){
-    if(confirm("Delete all history?")){
-        history=[];
-        localStorage.setItem("chapatiHistory","[]");
-        renderHistory();
+function deleteNotEating(index){
+    if(isLocked()){ alert("🔒 Time up!"); return; }
+    let notEatingItems = data.filter(d=>d.type==="not_eating").sort((a,b)=>a.room-b.room);
+    let realIndex = data.indexOf(notEatingItems[index]);
+    if(confirm("Delete this entry?")){
+        data.splice(realIndex,1);
+        localStorage.setItem("chapatiData", JSON.stringify(data));
+        updateUI();
     }
 }
 
-/* UI */
+/* UI UPDATE */
 function updateUI(){
-    let total=0, notEat=0, roomHtml="", names=[];
-    data.filter(d=>d.type==="eating").forEach(d=>{
-        total+=d.count;
-        roomHtml+=`❤️ Room ${d.room}: ${d.count}<br>`;
-    });
-    data.forEach(d=>{
-        if(d.type==="not_eating"){ notEat++; names.push(d.name); }
+    let eatingHtml = "";
+    let notEatingHtml = "";
+    let totalChapati = 0;
+
+    // Eating sorted
+    let eatingRooms = data.filter(d=>d.type==="eating").sort((a,b)=>a.room-b.room);
+    eatingRooms.forEach((d,i)=>{
+        totalChapati += d.count;
+        eatingHtml += `❤️ Room ${d.room} : ${d.count} people 
+            <button class="editBtn" onclick="editEating(${i})">Edit</button><br>`;
     });
 
-    document.getElementById("publicRooms").innerHTML = roomHtml || "No rooms yet";
+    // Not Eating sorted
+    let notEatingRooms = data.filter(d=>d.type==="not_eating").sort((a,b)=>a.room-b.room);
+    notEatingRooms.forEach((d,i)=>{
+        notEatingHtml += `❌ Room ${d.room} - ${d.name} 
+            <button class="editBtn" onclick="editNotEating(${i})">Edit</button>
+            <button class="deleteBtn" onclick="deleteNotEating(${i})">Delete</button><br>`;
+    });
+
+    document.getElementById("eatingRooms").innerHTML = eatingHtml || "No eating entries yet ❤️";
+    document.getElementById("notEatingRooms").innerHTML = notEatingHtml || "No not eating entries yet ❌";
 
     if(isAdmin){
-        document.getElementById("totalChapati").innerText = total;
-        document.getElementById("roomWise").innerHTML = roomHtml;
-        document.getElementById("notEatingNames").innerHTML = names.join("<br>") || "No data";
-        document.getElementById("totalNotEating").innerText = notEat;
+        document.getElementById("totalChapati").innerText = totalChapati || 0;
+        document.getElementById("roomWise").innerHTML = eatingRooms.map(d=>`Room ${d.room} : ${d.count}`).join("<br>") || "No data";
+        document.getElementById("notEatingNames").innerHTML = notEatingRooms.map(d=>`Room ${d.room} - ${d.name}`).join("<br>") || "No data";
+        document.getElementById("totalNotEating").innerText = notEatingRooms.length;
     }
+
+    document.getElementById("lockMsg").innerText = isLocked() 
+        ? "🔒 Submissions closed for today 🍱" 
+        : "✅ Submissions open till 6:30 PM ❤️";
 }
 
-/* TIME */
+/* DATE TIME */
 function updateDateTime(){
-    const now=new Date();
-    document.getElementById("date").innerText="📅 "+now.toDateString();
-    document.getElementById("time").innerText="🕒 "+now.toLocaleTimeString();
-    document.getElementById("lockMsg").innerText = isLocked() 
-        ? "🔒 Closed for today" 
-        : "✅ Open till 6:30 PM";
+    const now = new Date();
+    document.getElementById("date").innerText = "📅 "+now.toDateString();
+    document.getElementById("time").innerText = "🕒 "+now.toLocaleTimeString();
 }
 
 setInterval(updateDateTime,1000);
-cleanHistory();
-saveToHistory();   // ensures today always appears
 updateUI();
 updateDateTime();
-</script>
 
+</script>
 </body>
 </html>
