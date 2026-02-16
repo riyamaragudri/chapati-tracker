@@ -73,6 +73,15 @@ input {
     text-align:left;
     font-size:14px;
 }
+.editBtn{
+    margin-left:8px;
+    padding:4px 8px;
+    border-radius:6px;
+    border:none;
+    background:#ffb703;
+    cursor:pointer;
+    font-size:12px;
+}
 </style>
 </head>
 
@@ -152,7 +161,7 @@ const ADMIN_PASSWORD = "1234";
 function isLocked(){
     const now = new Date();
     const lockTime = new Date();
-    lockTime.setHours(18,30,0); // 6:30 PM
+    lockTime.setHours(18,30,0);
     return now >= lockTime;
 }
 
@@ -160,7 +169,7 @@ function isLocked(){
 function showPopup(){ document.getElementById("popup").style.display = "flex"; }
 function closePopup(){ document.getElementById("popup").style.display = "none"; }
 
-/* 🍽️ EATING (ROOM + TOTAL PEOPLE COUNT) */
+/* 🍽️ EATING */
 function eatYes(){
     if(isLocked()){ showPopup(); return; }
 
@@ -180,7 +189,7 @@ function eatYes(){
     const exists = data.find(d => d.type==="eating" && d.room == room);
 
     if(exists){
-        alert(" Your room counting is already submitted 🏠\n\nIf any issue, contact mess monitor before 6:30 PM ⏰");
+        alert("Room already submitted 🏠\nEdit it if needed before 6:30 PM ⏰");
         return;
     }
 
@@ -196,7 +205,7 @@ function eatYes(){
     alert("Room " + room + " submitted successfully 🍽️❤️");
 }
 
-/* ❌ NOT EATING (NAME ONLY) */
+/* ❌ NOT EATING */
 function showInput(){
     if(isLocked()){ showPopup(); return; }
     document.getElementById("nameBox").classList.remove("hidden");
@@ -224,6 +233,32 @@ function addNotEating(){
     alert("Submitted successfully ❤️");
 }
 
+/* ✏️ EDIT ROOM */
+function editRoom(roomNo){
+    if(isLocked()){
+        showPopup();
+        return;
+    }
+
+    const entry = data.find(d => d.type==="eating" && d.room == roomNo);
+    if(!entry) return;
+
+    const newCount = prompt(`Edit count for Room ${roomNo}:`, entry.count);
+
+    if(newCount === null) return;
+
+    if(newCount === "" || newCount <= 0){
+        alert("Invalid count ❌");
+        return;
+    }
+
+    entry.count = parseInt(newCount);
+    localStorage.setItem("chapatiData", JSON.stringify(data));
+    updateUI();
+
+    alert(`Room ${roomNo} updated successfully ✏️❤️`);
+}
+
 /* 👑 ADMIN */
 function adminLogin(){
     const pass = prompt("Enter admin password:");
@@ -245,12 +280,17 @@ function updateUI(){
     let roomHtml = "";
     let notEatingNames = [];
 
-    // sort rooms ascending
     let eatingRooms = data.filter(d=>d.type==="eating").sort((a,b)=>a.room-b.room);
 
     eatingRooms.forEach(d=>{
         totalChapati += d.count;
-        roomHtml += `❤️ Room ${d.room} : ${d.count} people<br>`;
+
+        let editBtn = "";
+        if(!isLocked()){
+            editBtn = ` <button class="editBtn" onclick="editRoom(${d.room})">✏️ Edit</button>`;
+        }
+
+        roomHtml += `❤️ Room ${d.room} : ${d.count} people ${editBtn}<br>`;
     });
 
     data.forEach(d=>{
@@ -260,7 +300,6 @@ function updateUI(){
         }
     });
 
-    // Public view (visible to all)
     document.getElementById("publicRooms").innerHTML = roomHtml || "No rooms submitted yet ❤️";
 
     if(isAdmin){
