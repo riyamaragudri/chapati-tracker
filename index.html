@@ -130,7 +130,7 @@ input {
     <div class="popup">
         <div class="emoji">🥺</div>
         <h3>Sorry... Time’s Up!</h3>
-        <p>Submissions closed after <b>7:30 PM</b> ⏰<br>
+        <p>Submissions closed after <b>6:30 PM</b> ⏰<br>
         Please try again tomorrow 💕</p>
         <button onclick="closePopup()">Okay 💗</button>
     </div>
@@ -142,11 +142,11 @@ let isAdmin = false;
 
 const ADMIN_PASSWORD = "1234";
 
-/* ⏰ TIME LOCK = 7:30 PM */
+/* ⏰ TIME LOCK = 6:30 PM */
 function isLocked(){
     const now = new Date();
     const lockTime = new Date();
-    lockTime.setHours(19,30,0);
+    lockTime.setHours(18,30,0);  // 6:30 PM
     return now >= lockTime;
 }
 
@@ -175,7 +175,7 @@ function eatYes(){
     const exists = data.find(d => d.type==="eating" && d.room == room);
 
     if(exists){
-        alert("🥺 Your room counting is already submitted 🏠💗\n\nIf any issue, contact mess monitor before 7:30 PM ⏰");
+        alert("🥺 Your room counting is already submitted 🏠💗\n\nIf any issue, contact mess monitor before 6:30 PM ⏰");
         return;
     }
 
@@ -268,7 +268,7 @@ function updateDateTime(){
     if(isLocked()){
         document.getElementById("lockMsg").innerText = "🔒 Submissions closed for today";
     } else {
-        document.getElementById("lockMsg").innerText = "✅ Submissions open till 7:30 PM";
+        document.getElementById("lockMsg").innerText = "✅ Submissions open till 6:30 PM";
     }
 }
 
