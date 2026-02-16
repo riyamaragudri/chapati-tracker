@@ -79,7 +79,7 @@ input {
 <body>
 
 <div class="container">
-<h2>🍽️ Chapati Tracker</h2>
+<h2>🍽️ Chapati Tracker </h2>
 
 <div class="datetime">
     <div id="date"></div>
@@ -95,14 +95,20 @@ input {
     <button onclick="addNotEating()">Submit</button>
 </div>
 
+<!-- ROOM DISPLAY FOR ALL -->
+<div class="adminBox">
+    <b>🏠 Rooms Submitted ❤️</b>
+    <div id="publicRooms"></div>
+</div>
+
 <!-- ADMIN -->
 <button class="admin" onclick="adminLogin()">Admin Login</button>
 
 <div id="adminPanel" class="hidden">
-    <h3>👑 Admin Panel</h3>
+    <h3>🥑Admin Panel</h3>
 
     <div class="adminBox">
-        <b>📊 Total Chapatis Needed Today:</b>
+        <b>📊 Total Chapatis Needed Today ❤️:</b>
         <div id="totalChapati"></div>
     </div>
 
@@ -128,7 +134,7 @@ input {
 <!-- TIME UP POPUP -->
 <div class="popup-overlay" id="popup">
     <div class="popup">
-        <div class="emoji">🥺</div>
+        <div class="emoji">🍱</div>
         <h3>Sorry... Time’s Up!</h3>
         <p>Submissions closed after <b>6:30 PM</b> ⏰<br>
         Please try again tomorrow 💕</p>
@@ -146,7 +152,7 @@ const ADMIN_PASSWORD = "1234";
 function isLocked(){
     const now = new Date();
     const lockTime = new Date();
-    lockTime.setHours(18,30,0);  // 6:30 PM
+    lockTime.setHours(18,30,0); // 6:30 PM
     return now >= lockTime;
 }
 
@@ -171,24 +177,23 @@ function eatYes(){
         return;
     }
 
-    // Block duplicate room
     const exists = data.find(d => d.type==="eating" && d.room == room);
 
     if(exists){
-        alert("🥺 Your room counting is already submitted 🏠💗\n\nIf any issue, contact mess monitor before 6:30 PM ⏰");
+        alert(" Your room counting is already submitted 🏠\n\nIf any issue, contact mess monitor before 6:30 PM ⏰");
         return;
     }
 
     data.push({
         type: "eating",
-        room: room,
+        room: parseInt(room),
         count: parseInt(count)
     });
 
     localStorage.setItem("chapatiData", JSON.stringify(data));
     updateUI();
 
-    alert("Room " + room + " submitted successfully 🍽️✅");
+    alert("Room " + room + " submitted successfully 🍽️❤️");
 }
 
 /* ❌ NOT EATING (NAME ONLY) */
@@ -216,7 +221,7 @@ function addNotEating(){
     document.getElementById("nameBox").classList.add("hidden");
 
     updateUI();
-    alert("Submitted successfully ✅");
+    alert("Submitted successfully ❤️");
 }
 
 /* 👑 ADMIN */
@@ -226,7 +231,7 @@ function adminLogin(){
         isAdmin = true;
         document.getElementById("adminPanel").classList.remove("hidden");
         updateUI();
-        alert("Admin mode enabled 👑");
+        alert("Admin mode enabled 🎀");
     } else {
         alert("Wrong password ❌");
     }
@@ -240,21 +245,28 @@ function updateUI(){
     let roomHtml = "";
     let notEatingNames = [];
 
+    // sort rooms ascending
+    let eatingRooms = data.filter(d=>d.type==="eating").sort((a,b)=>a.room-b.room);
+
+    eatingRooms.forEach(d=>{
+        totalChapati += d.count;
+        roomHtml += `❤️ Room ${d.room} : ${d.count} people<br>`;
+    });
+
     data.forEach(d=>{
-        if(d.type==="eating"){
-            totalChapati += d.count;
-            roomHtml += `Room ${d.room} : ${d.count} people<br>`;
-        }
         if(d.type==="not_eating"){
             notEatCount++;
             notEatingNames.push(d.name);
         }
     });
 
+    // Public view (visible to all)
+    document.getElementById("publicRooms").innerHTML = roomHtml || "No rooms submitted yet ❤️";
+
     if(isAdmin){
         document.getElementById("totalChapati").innerText = totalChapati || 0;
         document.getElementById("roomWise").innerHTML = roomHtml || "No data";
-        document.getElementById("notEatingNames").innerHTML = notEatingNames.map(n=>"• "+n).join("<br>") || "No data";
+        document.getElementById("notEatingNames").innerHTML = notEatingNames.map(n=>" "+n).join("<br>") || "No data";
         document.getElementById("totalNotEating").innerText = notEatCount;
     }
 }
@@ -266,9 +278,9 @@ function updateDateTime(){
     document.getElementById("time").innerText = "🕒 " + now.toLocaleTimeString();
 
     if(isLocked()){
-        document.getElementById("lockMsg").innerText = "🔒 Submissions closed for today";
+        document.getElementById("lockMsg").innerText = "🔒 Submissions closed for today 🍱";
     } else {
-        document.getElementById("lockMsg").innerText = "✅ Submissions open till 6:30 PM";
+        document.getElementById("lockMsg").innerText = "✅ Submissions open till 6:30 PM ❤️";
     }
 }
 
