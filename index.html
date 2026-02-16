@@ -46,24 +46,6 @@ input {
 .lock { color:red; font-weight:bold; margin-top:10px; }
 .hidden { display:none; }
 
-.popup-overlay{
-    position:fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    background:rgba(0,0,0,0.4);
-    display:none;
-    justify-content:center;
-    align-items:center;
-    z-index:999;
-}
-.popup{
-    background:white;
-    padding:25px;
-    border-radius:20px;
-    text-align:center;
-    width:300px;
-}
-
 .adminBox{
     background:#f5f5ff;
     padding:10px;
@@ -71,15 +53,6 @@ input {
     margin-top:10px;
     text-align:left;
     font-size:14px;
-}
-.editBtn{
-    margin-left:8px;
-    padding:4px 8px;
-    border-radius:6px;
-    border:none;
-    background:#ffb703;
-    cursor:pointer;
-    font-size:12px;
 }
 </style>
 </head>
@@ -163,11 +136,13 @@ function cleanHistory(){
 /* SAVE TODAY TO HISTORY */
 function saveToHistory(){
     const today = todayStr();
-    const exists = history.find(h=>h.date===today);
-    if(!exists){
-        history.push({date: today, data: JSON.parse(JSON.stringify(data))});
-        localStorage.setItem("chapatiHistory", JSON.stringify(history));
+    let entry = history.find(h=>h.date===today);
+    if(!entry){
+        entry = {date: today, data: []};
+        history.push(entry);
     }
+    entry.data = JSON.parse(JSON.stringify(data));
+    localStorage.setItem("chapatiHistory", JSON.stringify(history));
     cleanHistory();
 }
 
@@ -179,7 +154,8 @@ function eatYes(){
     const count = prompt("How many people?");
     if(!room || !count || count<=0) return alert("Invalid input");
 
-    if(data.find(d=>d.type==="eating" && d.room==room)) return alert("Room already submitted");
+    if(data.find(d=>d.type==="eating" && d.room==room)) 
+        return alert("Room already submitted");
 
     data.push({type:"eating",room:parseInt(room),count:parseInt(count)});
     localStorage.setItem("chapatiData", JSON.stringify(data));
@@ -224,15 +200,37 @@ function toggleHistory(){
 function renderHistory(){
     let html="";
     history.sort((a,b)=> new Date(b.date)-new Date(a.date));
+
     history.forEach(h=>{
         html+=`<b>📅 ${h.date}</b><br>`;
-        let t=0, ne=0;
+
+        let chapatiTotal = 0;
+        let notEatNames = [];
+
         h.data.forEach(d=>{
-            if(d.type==="eating") t+=d.count;
-            if(d.type==="not_eating") ne++;
+            if(d.type==="eating"){
+                chapatiTotal += d.count;
+            }
+            if(d.type==="not_eating"){
+                notEatNames.push(d.name);
+            }
         });
-        html+=`🍽️ Chapatis: ${t} | ❌ Not eating: ${ne}<br><hr>`;
+
+        html += `🍽️ Chapatis: ${chapatiTotal}<br>`;
+        html += `❌ Not Eating Count: ${notEatNames.length}<br>`;
+
+        if(notEatNames.length > 0){
+            html += `👤 Not Eating Names:<br>`;
+            notEatNames.forEach(n=>{
+                html += `• ${n}<br>`;
+            });
+        } else {
+            html += `👤 Not Eating Names: None<br>`;
+        }
+
+        html += `<hr>`;
     });
+
     document.getElementById("historyData").innerHTML = html || "No history";
 }
 
@@ -270,11 +268,14 @@ function updateDateTime(){
     const now=new Date();
     document.getElementById("date").innerText="📅 "+now.toDateString();
     document.getElementById("time").innerText="🕒 "+now.toLocaleTimeString();
-    document.getElementById("lockMsg").innerText = isLocked() ? "🔒 Closed for today" : "✅ Open till 6:30 PM";
+    document.getElementById("lockMsg").innerText = isLocked() 
+        ? "🔒 Closed for today" 
+        : "✅ Open till 6:30 PM";
 }
 
 setInterval(updateDateTime,1000);
 cleanHistory();
+saveToHistory();   // ensures today always appears
 updateUI();
 updateDateTime();
 </script>
