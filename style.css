@@ -37,13 +37,14 @@ input, select {
   border-radius: 8px;
   border:1px solid #ccc;
 }
-
-  footer {
-  text-align: right;
-  font-size: 14px;
-  font-family: cursive;
-  margin-top: 40px;
-  margin-right: 15px;
-  color: #6c63ff;
-  opacity: 0.9;
-  }
+footer {
+    position: fixed;
+    bottom: 15px;
+    right: 20px;
+    font-size: 14px;
+    font-family: "Brush Script MT", cursive;
+    color: #6c63ff;
+    opacity: 0.9;
+    z-index: 1000;
+}
+  
