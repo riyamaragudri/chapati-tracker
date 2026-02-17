@@ -39,11 +39,12 @@ input, select {
 }
 
   footer {
-  text-align: center;
+  position: fixed;
+  bottom: 12px;
+  right: 18px;
   font-size: 13px;
-  margin-top: 25px;
-  padding: 10px;
-  color: #555;
-  opacity: 0.8;
+  font-family: "Segoe Script", cursive;
+  color: #6c63ff;
+  opacity: 0.85;
   letter-spacing: 0.5px;
   }
