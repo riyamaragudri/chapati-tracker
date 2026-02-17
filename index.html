@@ -92,8 +92,8 @@ input[type="number"], input[type="text"] {
     <div id="time"></div>
 </div>
 
-<button class="yes" onclick="eatYes()">I will eat chapati</button>
-<button class="no" onclick="showInput()">I will NOT eat chapati</button>
+<button class="yes" onclick="eatYes()">I will eat chapati✅️</button>
+<button class="no" onclick="showInput()">I will NOT eat chapati❌️</button>
 
 <!-- NOT EATING INPUT -->
 <div id="nameBox" class="hidden">
@@ -193,7 +193,7 @@ function saveToHistory(){
 /* 🍽️ EATING */
 function eatYes(){
     if(isLocked()){ alert("Sorry, time up 💗"); return; }
-    const room = prompt("Enter your room number:");
+    const room = prompt("🏠Enter your room number:");
     const count = prompt("How many people are eating from this room?");
     if(!room || !count || count<=0) return alert("Invalid input");
     if(data.find(d=>d.type==="eating" && d.room==room)) return alert("Room already submitted");
@@ -239,7 +239,7 @@ function adminLogin(){
 function editEating(index){
     if(isLocked()){ alert("Sorry, time up 💗"); return; }
     let item = data.filter(d=>d.type==="eating")[index];
-    let room = prompt("Edit room number:", item.room);
+    let room = prompt("🏠Edit room number:", item.room);
     if(!room || isNaN(room) || parseInt(room)<=0) return alert("Enter valid room number ❗");
     let count = prompt("Edit count:", item.count);
     if(!count || isNaN(count) || parseInt(count)<=0) return alert("Enter valid count ❗");
