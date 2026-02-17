@@ -6,14 +6,15 @@
 <title>Chapati Tracker</title>
 
 <!-- Favicon -->
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 
 <!-- PWA Meta -->
 <meta name="theme-color" content="#ff7a18">
 <link rel="manifest" href="manifest.json">
 
-<style>
+
+
 
 <style>
 body {
@@ -351,6 +352,12 @@ saveToHistory();
 updateUI();
 updateDateTime();
 </script>
-
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('service-worker.js');
+  });
+}
+</script>
 </body>
 </html>
