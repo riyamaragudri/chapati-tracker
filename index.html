@@ -295,7 +295,26 @@ function clearHistory(){
         renderHistory();
     }
 }
+function dailyResetCheck(){
+    const today = new Date().toDateString();
+    const lastDate = localStorage.getItem("lastActiveDate");
 
+    if(lastDate !== today){
+        // Save yesterday data to history
+        if(data.length > 0){
+            const entry = {date: lastDate || today, data: JSON.parse(JSON.stringify(data))};
+            history.push(entry);
+            localStorage.setItem("chapatiHistory", JSON.stringify(history));
+        }
+
+        // Reset today's data
+        data = [];
+        localStorage.setItem("chapatiData", JSON.stringify([]));
+
+        // Update date
+        localStorage.setItem("lastActiveDate", today);
+    }
+}
 /* UI UPDATE */
 function updateUI(){
     let eatingHtml="", notEatingHtml="", totalChapati=0, totalNotEating=0, notEatNames=[];
@@ -335,8 +354,8 @@ function updateDateTime(){
 }
 
 setInterval(updateDateTime,1000);
+dailyResetCheck();   // 🔥 auto reset system
 cleanHistory();
-saveToHistory();
 updateUI();
 updateDateTime();
 </script>
