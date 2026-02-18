@@ -326,29 +326,32 @@ function dailyResetCheck(){
 }
 /* UI UPDATE */
 function updateUI(){
-    let eatingHtml="", notEatingHtml="", totalChapati=0, totalNotEating=0, notEatNames=[];
-    let eatingRooms = data.filter(d=>d.type==="eating").sort((a,b)=>a.room-b.room);
-    eatingRooms.forEach((d,i)=>{
-        totalChapati+=d.count;
-        eatingHtml+=`❤️ Room ${d.room}: ${d.count} 
-            <button class="editBtn" onclick="editEating(${i})">✏️ Edit</button><br>`;
-    });
-    let notEatingRooms = data.filter(d=>d.type==="not_eating").sort((a,b)=>a.room-b.room);
-    notEatingRooms.forEach((d,i)=>{
-        totalNotEating++;
-        notEatNames.push(d.name);
-        notEatingHtml+=`❌ Room ${d.room} - ${d.name} 
-            <button class="editBtn" onclick="editNotEating(${i})">✏️ Edit</button>
-            <button class="deleteBtn" onclick="deleteNotEating(${i})">🗑️ Delete</button><br>`;
-    });
-    document.getElementById("eatingRooms").innerHTML = eatingHtml || "No eating entries yet ❤️";
-    document.getElementById("notEatingRooms").innerHTML = notEatingHtml || "No not eating entries yet ❌";
+    let total=0, notEat=0;
+    let roomHtml="", names=[];
 
+    // EATING
+    data.filter(d=>d.type==="eating").forEach(d=>{
+        total+=d.count;
+        roomHtml+=`❤️ Room ${d.room}: ${d.count}<br>`;
+    });
+
+    // NOT EATING
+    data.forEach(d=>{
+        if(d.type==="not_eating"){ 
+            notEat++; 
+            names.push(d.name); 
+        }
+    });
+
+    // ✅ PUBLIC VIEW (everyone sees this)
+    document.getElementById("publicRooms").innerHTML = roomHtml || "No rooms yet";
+
+    // ✅ ADMIN VIEW
     if(isAdmin){
-        document.getElementById("totalChapati").innerText = totalChapati;
-        document.getElementById("roomWise").innerHTML = eatingRooms.map(d=>`Room ${d.room}: ${d.count}`).join("<br>") || "No data";
-        document.getElementById("notEatingNames").innerHTML = notEatNames.join("<br>") || "No data";
-        document.getElementById("totalNotEating").innerText = totalNotEating;
+        document.getElementById("totalChapati").innerText = total;
+        document.getElementById("roomWise").innerHTML = roomHtml || "No data";
+        document.getElementById("notEatingNames").innerHTML = names.join("<br>") || "No data";
+        document.getElementById("totalNotEating").innerText = notEat;
     }
 }
 
