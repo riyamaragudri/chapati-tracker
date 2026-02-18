@@ -136,7 +136,7 @@ let dbData={};
 function isLocked(){
     const now=new Date();
     const lock=new Date();
-    lock.setHours(19,30,0);
+    lock.setHours(18,30,0);
     return now>=lock;
 }
 
@@ -270,7 +270,7 @@ function updateTime(){
     const n=new Date();
     document.getElementById("date").innerText="📅 "+n.toDateString();
     document.getElementById("time").innerText="🕒 "+n.toLocaleTimeString();
-    document.getElementById("lockMsg").innerText=isLocked()?"🔒 Closed":"✅ Open till 7:30 PM";
+    document.getElementById("lockMsg").innerText=isLocked()?"🔒 Closed":"✅ Open till 6:30 PM";
 }
 
 setInterval(updateTime,1000);
