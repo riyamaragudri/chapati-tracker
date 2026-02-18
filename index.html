@@ -7,7 +7,9 @@
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
 <link href="https://fonts.googleapis.com/css2?family=Tangerine:wght@400;700&display=swap" rel="stylesheet">
+
 <style>
 body {
     font-family: 'Segoe UI', sans-serif;
@@ -38,7 +40,8 @@ button{
 }
 .hidden{display:none;}
 .lock{color:red;font-weight:bold;margin-top:10px;}
-    footer {
+
+footer {
     position: fixed;
     bottom: 12px;
     right: 18px;
@@ -46,7 +49,7 @@ button{
     font-style: italic;
     color: #666;
     opacity: 0.8;
-    }
+}
 </style>
 </head>
 
@@ -100,6 +103,9 @@ button{
         <b>Total Not Eating:</b>
         <div id="totalNotEating"></div>
     </div>
+
+    <button class="admin" onclick="toggleHistory()">📚 View Last 7 Days History</button>
+    <div id="historyPanel" class="hidden sectionBox"></div>
 </div>
 
 <div id="lockMsg" class="lock"></div>
@@ -120,7 +126,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/* USER ID (per device) */
+/* USER ID */
 let userId = localStorage.getItem("chapatiUserId");
 if(!userId){
     userId = "user_" + Math.random().toString(36).substr(2,9);
@@ -132,7 +138,7 @@ let isAdmin=false;
 const ADMIN_PASSWORD="5678";
 let dbData={};
 
-/* ⏰ LOCK TIME 7:30 PM */
+/* ⏰ LOCK TIME 6:30 PM */
 function isLocked(){
     const now=new Date();
     const lock=new Date();
@@ -146,14 +152,43 @@ db.ref("today").on("value",snap=>{
     updateUI();
 });
 
-/* DAILY RESET */
+/* ✅ DAILY RESET + HISTORY */
 function dailyReset(){
-    const today = new Date().toDateString();
-    db.ref("meta/date").once("value").then(s=>{
-        if(s.val()!==today){
-            db.ref("history/"+Date.now()).set(dbData);
-            db.ref("today").set({eating:{},not_eating:{}});
-            db.ref("meta/date").set(today);
+    const todayStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+    db.ref("meta/date").once("value").then(snap=>{
+        const lastDate = snap.val();
+
+        if(lastDate !== todayStr){
+
+            // save yesterday
+            if(dbData){
+                db.ref("history/"+lastDate).set(dbData);
+            }
+
+            // reset today
+            db.ref("today").set({eating:{}, not_eating:{}});
+
+            // update date
+            db.ref("meta/date").set(todayStr);
+
+            // clean >7 days
+            cleanOldHistory();
+        }
+    });
+}
+
+/* ✅ CLEAN HISTORY */
+function cleanOldHistory(){
+    db.ref("history").once("value").then(snap=>{
+        const historyData = snap.val() || {};
+        const dates = Object.keys(historyData).sort(); // YYYY-MM-DD
+
+        if(dates.length > 7){
+            const toDelete = dates.slice(0, dates.length - 7);
+            toDelete.forEach(d=>{
+                db.ref("history/"+d).remove();
+            });
         }
     });
 }
@@ -224,6 +259,51 @@ function adminLogin(){
     }
 }
 
+/* HISTORY */
+function toggleHistory(){
+    const panel=document.getElementById("historyPanel");
+    panel.classList.toggle("hidden");
+    if(!panel.classList.contains("hidden")){
+        loadHistory();
+    }
+}
+
+function loadHistory(){
+    db.ref("history").once("value").then(snap=>{
+        const history=snap.val()||{};
+        let html="";
+        const dates=Object.keys(history).sort().reverse();
+
+        dates.forEach(date=>{
+            const day=history[date];
+            let chap=0, notEat=0, names=[];
+
+            if(day.eating){
+                Object.values(day.eating).forEach(d=>{
+                    chap+=d.count;
+                });
+            }
+
+            if(day.not_eating){
+                Object.values(day.not_eating).forEach(d=>{
+                    notEat++;
+                    names.push(d.name);
+                });
+            }
+
+            html+=`
+            <b>📅 ${date}</b><br>
+            🍽️ Chapatis: ${chap}<br>
+            ❌ Not Eating: ${notEat}<br>
+            👤 Names: ${names.join(", ")||"None"}<br>
+            <hr>
+            `;
+        });
+
+        document.getElementById("historyPanel").innerHTML = html || "No history";
+    });
+}
+
 /* UI */
 function updateUI(){
     let eatingHtml="", notEatingHtml="";
@@ -235,8 +315,8 @@ function updateUI(){
         total+=d.count;
         let btn="";
         if(d.owner===userId){
-            btn=`<button class="editBtn" onclick="editEating('${id}')">✏️ Edit</button>
-                 <button class="deleteBtn" onclick="deleteEating('${id}')">🗑️ Delete</button>`;
+            btn=`<button class="editBtn" onclick="editEating('${id}')">✏️</button>
+                 <button class="deleteBtn" onclick="deleteEating('${id}')">🗑️</button>`;
         }
         eatingHtml+=`❤️ Room ${d.room}: ${d.count} ${btn}<br>`;
     });
@@ -248,8 +328,8 @@ function updateUI(){
         names.push(d.name);
         let btn="";
         if(d.owner===userId){
-            btn=`<button class="editBtn" onclick="editNotEating('${id}')">✏️ Edit</button>
-                 <button class="deleteBtn" onclick="deleteNotEating('${id}')">🗑️ Delete</button>`;
+            btn=`<button class="editBtn" onclick="editNotEating('${id}')">✏️</button>
+                 <button class="deleteBtn" onclick="deleteNotEating('${id}')">🗑️</button>`;
         }
         notEatingHtml+=`❌ Room ${d.room} - ${d.name} ${btn}<br>`;
     });
@@ -277,9 +357,7 @@ setInterval(updateTime,1000);
 dailyReset();
 updateTime();
 </script>
-    <footer>
- 🐾Crafted with care by RM
-    </footer>
 
+<footer>🐾Crafted with care by RM</footer>
 </body>
 </html>
