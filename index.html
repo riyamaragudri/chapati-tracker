@@ -137,6 +137,13 @@ if(!userId){
 let isAdmin=false;
 const ADMIN_PASSWORD="5678";
 let dbData={};
+    function eatingRoomExists(room){
+    const eat = dbData.eating || {};
+    for(let id in eat){
+        if(eat[id].room === room) return true;
+    }
+    return false;
+    }
 
 /* ⏰ LOCK TIME 6:30 PM */
 function isLocked(){
@@ -196,13 +203,24 @@ function cleanOldHistory(){
 /* EATING */
 function eatYes(){
     if(isLocked()) return alert("Time up");
-    const room=prompt("Room:");
-    const count=prompt("Count:");
-    if(!room||!count) return;
+
+    const room = prompt("Room:");
+    const count = prompt("Count:");
+
+    if(!room || !count) return;
+
+    const roomNo = parseInt(room);
+
+    // ❗ Check only eating section
+    if(eatingRoomExists(roomNo)){
+        alert("❌ This room already has an eating entry.");
+        return;
+    }
+
     db.ref("today/eating").push({
-        room:parseInt(room),
-        count:parseInt(count),
-        owner:userId
+        room: roomNo,
+        count: parseInt(count),
+        owner: userId
     });
 }
 
