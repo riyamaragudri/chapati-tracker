@@ -161,27 +161,31 @@ footer {
 <div id="adminBox" class="hidden">  
     <input type="password" id="adminPassInput" placeholder="🔑 Admin Password">  
     <button onclick="adminLoginTextBox()">🎀 Submit</button>  
-</div>  <div id="adminPanel" class="hidden">  
-    <h3>🥑 Admin Panel</h3>  
+</div>  <div id="adminPanel" class="hidden">
+    <h3>🥑 Admin Panel</h3>
 
-    <div class="sectionBox">  
-        <b>Total Chapatis:</b>  
-        <div id="totalChapati"></div>  
-    </div>  <div class="sectionBox">  
-    <b>Room-wise:</b>  
-    <div id="roomWise"></div>  
-</div>  
+    <div class="sectionBox">
+        <b>Total Chapatis:</b>
+        <div id="totalChapati"></div>
+    </div>
 
-<div class="sectionBox">  
-    <b>Not Eating Names:</b>  
-    <div id="notEatingNames"></div>  
-</div>  
+    <div class="sectionBox">
+        <b>Room-wise:</b>
+        <div id="roomWise"></div>
+    </div>
 
-<button class="admin" onclick="toggleHistory()">📚 View Last 7 Days History</button>  
-<div id="historyPanel" class="hidden sectionBox"></div>
+    <div class="sectionBox">
+        <b>Not Eating Names:</b>
+        <div id="notEatingNames"></div>
+    </div>
 
-</div> <!-- RESET BUTTON (place here) -->  
-<button class="admin" onclick="manualReset()">♻️ Reset Today</button>   <div id="lockMsg" class="lock"></div>  
+    <button class="admin" onclick="toggleHistory()">📚 View Last 7 Days History</button>
+    <div id="historyPanel" class="hidden sectionBox"></div>
+
+    <!-- ✅ Reset Button at bottom inside admin panel -->
+    <button class="admin" onclick="manualReset()" style="margin-top:15px;">♻️ Reset Today</button>
+
+    <div id="lockMsg" class="lock"></div>
 </div>  <script>  
 /* 🔥 FIREBASE CONFIG */  
 const firebaseConfig = {  
