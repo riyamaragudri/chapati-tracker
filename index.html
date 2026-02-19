@@ -133,13 +133,15 @@ input:focus{
 }
 
 /* 🐾 Footer */
+
 footer {
+    font-family: 'Tangerine', cursive;
     position: fixed;
     bottom: 12px;
     right: 18px;
     font-size: 13px;
     font-style: italic;
-    color: #c58cff;
+    color: #ff66a3; /* pastel pink */
     opacity: 0.9;
 }
 </style>
@@ -152,9 +154,16 @@ footer {
 <div id="date"></div>
 <div id="time"></div>
 
-<button class="yes" onclick="eatYes()">I will eat chapati</button>
-<button class="no" onclick="showInput()">I will NOT eat chapati</button>
+<!-- Eating Button + Textbox -->
+<button class="yes" onclick="toggleEatBox()">I will eat chapati</button>
+<div id="eatBox" class="hidden">
+    <input type="number" id="eatRoomInput" placeholder="🏠 Room number">
+    <input type="number" id="eatCountInput" placeholder="🍽️ Count">
+    <button onclick="addEating()">🎀 Submit</button>
+</div>
 
+<!-- Not Eating Button + Textbox -->
+<button class="no" onclick="toggleNotEatBox()">I will NOT eat chapati</button>
 <div id="nameBox" class="hidden">
     <input type="number" id="roomInput" placeholder="🏠 Room number">
     <input type="text" id="nameInput" placeholder="🌸 Your name">
@@ -171,7 +180,12 @@ footer {
     <div id="notEatingRooms"></div>
 </div>
 
-<button class="admin" onclick="adminLogin()">👑 Admin Login</button>
+<!-- Admin Button + Textbox -->
+<button class="admin" onclick="toggleAdminBox()">👑 Admin Login</button>
+<div id="adminBox" class="hidden">
+    <input type="password" id="adminPassInput" placeholder="🔑 Admin Password">
+    <button onclick="adminLoginTextBox()">🎀 Submit</button>
+</div>
 
 <div id="adminPanel" class="hidden">
     <h3>🥑 Admin Panel</h3>
@@ -209,7 +223,6 @@ const firebaseConfig = {
   messagingSenderId: "1033541076858",
   appId: "1:1033541076858:web:ad1c063a5e92c3f48678c3"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -224,20 +237,24 @@ if(!userId){
 let isAdmin=false;
 const ADMIN_PASSWORD="5678";
 let dbData={};
-function eatingRoomExists(room){
-    const eat = dbData.eating || {};
-    for(let id in eat){
-        if(eat[id].room === room) return true;
-    }
-    return false;
-}
 
-/* ⏰ LOCK TIME 6:30 PM */
+/* LOCK TIME */
 function isLocked(){
     const now=new Date();
     const lock=new Date();
     lock.setHours(18,30,0);
     return now>=lock;
+}
+
+/* Toggle Boxes */
+function toggleEatBox(){
+    document.getElementById("eatBox").classList.toggle("hidden");
+}
+function toggleNotEatBox(){
+    document.getElementById("nameBox").classList.toggle("hidden");
+}
+function toggleAdminBox(){
+    document.getElementById("adminBox").classList.toggle("hidden");
 }
 
 /* LIVE SYNC */
@@ -246,18 +263,13 @@ db.ref("today").on("value",snap=>{
     updateUI();
 });
 
-/* ✅ DAILY RESET + HISTORY */
+/* DAILY RESET */
 function dailyReset(){
     const todayStr = new Date().toISOString().split("T")[0];
-
     db.ref("meta/date").once("value").then(snap=>{
         const lastDate = snap.val();
-
         if(lastDate !== todayStr){
-            if(dbData){
-                db.ref("history/"+lastDate).set(dbData);
-            }
-
+            if(dbData){ db.ref("history/"+lastDate).set(dbData); }
             db.ref("today").set({eating:{}, not_eating:{}});
             db.ref("meta/date").set(todayStr);
             cleanOldHistory();
@@ -265,192 +277,81 @@ function dailyReset(){
     });
 }
 
-/* ✅ CLEAN HISTORY */
+/* CLEAN HISTORY */
 function cleanOldHistory(){
     db.ref("history").once("value").then(snap=>{
         const historyData = snap.val() || {};
         const dates = Object.keys(historyData).sort();
-
         if(dates.length > 7){
             const toDelete = dates.slice(0, dates.length - 7);
-            toDelete.forEach(d=>{
-                db.ref("history/"+d).remove();
-            });
+            toDelete.forEach(d=>{ db.ref("history/"+d).remove(); });
         }
     });
 }
 
-/* EATING */
-function eatYes(){
-    if(isLocked()) return alert("Time up");
-
-    const room = prompt("Room:");
-    const count = prompt("Count:");
-
-    if(!room || !count) return;
-
-    const roomNo = parseInt(room);
-
-    if(eatingRoomExists(roomNo)){
-        alert("❌ This room already has an eating entry.");
-        return;
-    }
-
-    db.ref("today/eating").push({
-        room: roomNo,
-        count: parseInt(count),
-        owner: userId
-    });
+/* ---------- ADD DATA FUNCTIONS ---------- */
+function eatingRoomExists(room){
+    const eat = dbData.eating || {};
+    for(let id in eat){ if(eat[id].room === room) return true; }
+    return false;
 }
 
-/* NOT EATING */
-function showInput(){
-    if(isLocked()) return;
-    document.getElementById("nameBox").classList.remove("hidden");
+function addEating(){
+    if(isLocked()) return alert("Time up");
+    const room = parseInt(document.getElementById("eatRoomInput").value);
+    const count = parseInt(document.getElementById("eatCountInput").value);
+    if(!room || !count) return;
+    if(eatingRoomExists(room)){ alert("❌ This room already has an eating entry."); return; }
+    db.ref("today/eating").push({room,count,owner:userId});
+    document.getElementById("eatBox").classList.add("hidden");
 }
 
 function addNotEating(){
-    const room=document.getElementById("roomInput").value;
+    const room=parseInt(document.getElementById("roomInput").value);
     const name=document.getElementById("nameInput").value;
     if(!room||!name) return;
-    db.ref("today/not_eating").push({
-        room:parseInt(room),
-        name,
-        owner:userId
-    });
+    db.ref("today/not_eating").push({room,name,owner:userId});
     document.getElementById("nameBox").classList.add("hidden");
 }
 
-/* USER EDIT/DELETE */
-function editEating(id){
-    const item=dbData.eating[id];
-    if(item.owner!==userId) return;
-    const c=prompt("New count:",item.count);
-    db.ref("today/eating/"+id+"/count").set(parseInt(c));
-}
-
-function deleteEating(id){
-    if(dbData.eating[id].owner!==userId) return;
-    db.ref("today/eating/"+id).remove();
-}
-
-function editNotEating(id){
-    const item=dbData.not_eating[id];
-    if(item.owner!==userId) return;
-    const n=prompt("New name:",item.name);
-    db.ref("today/not_eating/"+id+"/name").set(n);
-}
-
-function deleteNotEating(id){
-    if(dbData.not_eating[id].owner!==userId) return;
-    db.ref("today/not_eating/"+id).remove();
-}
-
-/* ADMIN */
-function adminLogin(){
-    const p=prompt("Admin password:");
-    if(p===ADMIN_PASSWORD){
+function adminLoginTextBox(){
+    const pass=document.getElementById("adminPassInput").value;
+    if(pass===ADMIN_PASSWORD){
         isAdmin=true;
         document.getElementById("adminPanel").classList.remove("hidden");
+        document.getElementById("adminBox").classList.add("hidden");
         updateUI();
-    }
+    } else alert("❌ Wrong password");
 }
+
+/* EDIT / DELETE FUNCTIONS REMAIN SAME */
+function editEating(id){ const item=dbData.eating[id]; if(item.owner!==userId) return; const c=prompt("New count:",item.count); db.ref("today/eating/"+id+"/count").set(parseInt(c)); }
+function deleteEating(id){ if(dbData.eating[id].owner!==userId) return; db.ref("today/eating/"+id).remove(); }
+function editNotEating(id){ const item=dbData.not_eating[id]; if(item.owner!==userId) return; const n=prompt("New name:",item.name); db.ref("today/not_eating/"+id+"/name").set(n); }
+function deleteNotEating(id){ if(dbData.not_eating[id].owner!==userId) return; db.ref("today/not_eating/"+id).remove(); }
 
 /* HISTORY */
-function toggleHistory(){
-    const panel=document.getElementById("historyPanel");
-    panel.classList.toggle("hidden");
-    if(!panel.classList.contains("hidden")){
-        loadHistory();
-    }
-}
+function toggleHistory(){ const panel=document.getElementById("historyPanel"); panel.classList.toggle("hidden"); if(!panel.classList.contains("hidden")) loadHistory(); }
+function loadHistory(){ db.ref("history").once("value").then(snap=>{ const history=snap.val()||{}; let html=""; const dates=Object.keys(history).sort().reverse(); dates.forEach(date=>{ const day=history[date]; let chap=0, notEat=0, names=[]; if(day.eating){ Object.values(day.eating).forEach(d=>{ chap+=d.count; }); } if(day.not_eating){ Object.values(day.not_eating).forEach(d=>{ notEat++; names.push(d.name); }); } html+=`<b>📅 ${date}</b><br>🍽️ Chapatis: ${chap}<br>❌ Not Eating: ${notEat}<br>👤 Names: ${names.join(", ")||"None"}<br><hr>`; }); document.getElementById("historyPanel").innerHTML = html || "No history"; }); }
 
+/* UI UPDATE */
 function updateUI(){
     let eatingHtml="", notEatingHtml="";
     let total=0, names=[];
-
-    /* ---------- EATING ---------- */
     const eat=dbData.eating||{};
-    let roomArray = [];
-
-    Object.keys(eat).forEach(id=>{
-        roomArray.push({
-            id,
-            room: eat[id].room,
-            count: eat[id].count,
-            owner: eat[id].owner
-        });
-    });
-
+    let roomArray=[];
+    Object.keys(eat).forEach(id=>{ roomArray.push({id,room:eat[id].room,count:eat[id].count,owner:eat[id].owner}); });
     roomArray.sort((a,b)=>a.room-b.room);
-
-    roomArray.forEach(d=>{
-        total += d.count;
-        let btn="";
-        if(d.owner===userId){
-            btn=`<button class="editBtn" onclick="editEating('${d.id}')">✏️</button>
-                 <button class="deleteBtn" onclick="deleteEating('${d.id}')">🗑️</button>`;
-        }
-        eatingHtml += `❤️ Room ${d.room}: ${d.count} ${btn}<br>`;
-    });
-
-    /* ---------- NOT EATING ---------- */
+    roomArray.forEach(d=>{ total+=d.count; let btn=""; if(d.owner===userId){ btn=`<button class="editBtn" onclick="editEating('${d.id}')">✏️</button> <button class="deleteBtn" onclick="deleteEating('${d.id}')">🗑️</button>`; } eatingHtml += `❤️ Room ${d.room}: ${d.count} ${btn}<br>`; });
     const ne=dbData.not_eating||{};
-    Object.keys(ne).forEach(id=>{
-        const d=ne[id];
-        names.push(`Room ${d.room} - ${d.name}`);
-        let btn="";
-        if(d.owner===userId){
-            btn=`<button class="editBtn" onclick="editNotEating('${id}')">✏️</button>
-                 <button class="deleteBtn" onclick="deleteNotEating('${id}')">🗑️</button>`;
-        }
-        notEatingHtml+=`❌ Room ${d.room} - ${d.name} ${btn}<br>`;
-    });
-
+    Object.keys(ne).forEach(id=>{ const d=ne[id]; names.push(`Room ${d.room} - ${d.name}`); let btn=""; if(d.owner===userId){ btn=`<button class="editBtn" onclick="editNotEating('${id}')">✏️</button> <button class="deleteBtn" onclick="deleteNotEating('${id}')">🗑️</button>`; } notEatingHtml+=`❌ Room ${d.room} - ${d.name} ${btn}<br>`; });
     document.getElementById("eatingRooms").innerHTML = eatingHtml || "No entries";
     document.getElementById("notEatingRooms").innerHTML = notEatingHtml || "No entries";
-
     if(isAdmin){
         document.getElementById("totalChapati").innerText=total;
         document.getElementById("roomWise").innerHTML=eatingHtml;
         document.getElementById("notEatingNames").innerHTML=names.join("<br>") || "None";
     }
-}
-
-function loadHistory(){
-    db.ref("history").once("value").then(snap=>{
-        const history=snap.val()||{};
-        let html="";
-        const dates=Object.keys(history).sort().reverse();
-
-        dates.forEach(date=>{
-            const day=history[date];
-            let chap=0, notEat=0, names=[];
-
-            if(day.eating){
-                Object.values(day.eating).forEach(d=>{
-                    chap+=d.count;
-                });
-            }
-
-            if(day.not_eating){
-                Object.values(day.not_eating).forEach(d=>{
-                    notEat++;
-                    names.push(d.name);
-                });
-            }
-
-            html+=`
-            <b>📅 ${date}</b><br>
-            🍽️ Chapatis: ${chap}<br>
-            ❌ Not Eating: ${notEat}<br>
-            👤 Names: ${names.join(", ")||"None"}<br>
-            <hr>
-            `;
-        });
-
-        document.getElementById("historyPanel").innerHTML = html || "No history";
-    });
 }
 
 /* TIME */
@@ -463,6 +364,7 @@ function updateTime(){
 
 setInterval(updateTime,1000);
 dailyReset();
+    setInterval(dailyReset, 60000);
 updateTime();
 </script>
 
