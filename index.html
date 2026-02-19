@@ -8,47 +8,139 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Tangerine:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&family=Tangerine:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
 body {
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg,#9ad1f1,#f8c1dc);
+    font-family: 'Quicksand', sans-serif;
+    background: linear-gradient(135deg,#ffd6ec,#e7d9ff,#d6f0ff);
     padding:20px;
 }
+
+/* 🌸 Main Card */
 .container {
     max-width:520px;
     margin:auto;
-    background:#ffffffcc;
+    background:rgba(255,255,255,0.92);
     padding:25px;
-    border-radius:20px;
-    box-shadow:0 8px 25px rgba(0,0,0,0.2);
+    border-radius:28px;
+    box-shadow:0 10px 30px rgba(255,182,213,0.45);
     text-align:center;
+    border:3px solid #ffe4f2;
 }
+
+/* 🎀 Title */
+h2{
+    font-family:'Tangerine',cursive;
+    font-size:38px;
+    color:#ff7ab8;
+    margin-bottom:8px;
+}
+
+/* ⏰ Date Time */
+#date,#time{
+    color:#a57aff;
+    font-size:14px;
+    margin:2px 0;
+}
+
+/* 💕 Buttons */
 button{
-    padding:12px;margin:6px 0;width:100%;border:none;border-radius:10px;font-size:16px;cursor:pointer;
+    padding:14px;
+    margin:8px 0;
+    width:100%;
+    border:none;
+    border-radius:18px;
+    font-size:16px;
+    cursor:pointer;
+    transition:0.25s;
+    box-shadow:0 6px 12px rgba(0,0,0,0.08);
 }
-.yes{background:#6fcf97;}
-.no{background:#f78da7;}
-.admin{background:#b084cc;}
 
-.editBtn{background:#ffd97d;font-size:12px;padding:4px 8px;border-radius:6px;margin-left:5px;}
-.deleteBtn{background:#ff7b7b;font-size:12px;padding:4px 8px;border-radius:6px;margin-left:5px;}
+button:hover{
+    transform:translateY(-2px) scale(1.01);
+}
 
+/* 🌷 Main Buttons */
+.yes{
+    background:linear-gradient(135deg,#b5f2d6,#6fe3b4);
+    color:#1f6f5b;
+    font-weight:600;
+}
+
+.no{
+    background:linear-gradient(135deg,#ffc0d9,#ff8fb8);
+    color:#7a1f4a;
+    font-weight:600;
+}
+
+.admin{
+    background:linear-gradient(135deg,#e6c9ff,#c49bff);
+    color:#4b237a;
+    font-weight:600;
+}
+
+/* ✏️ Edit/Delete */
+.editBtn{
+    background:#fff1a8;
+    font-size:12px;
+    padding:5px 9px;
+    border-radius:10px;
+    margin-left:5px;
+}
+
+.deleteBtn{
+    background:#ffb3b3;
+    font-size:12px;
+    padding:5px 9px;
+    border-radius:10px;
+    margin-left:5px;
+}
+
+/* 📦 Sections */
 .sectionBox{
-    background:#f0f4f8;padding:12px;border-radius:12px;margin-top:15px;text-align:left;
+    background:linear-gradient(135deg,#fff7fb,#f4f0ff);
+    padding:14px;
+    border-radius:18px;
+    margin-top:15px;
+    text-align:left;
+    border:1px dashed #ffcce7;
 }
-.hidden{display:none;}
-.lock{color:red;font-weight:bold;margin-top:10px;}
 
+/* ✨ Inputs */
+input{
+    width:100%;
+    padding:12px;
+    margin:6px 0;
+    border-radius:14px;
+    border:2px solid #ffd6ec;
+    outline:none;
+    font-size:14px;
+    background:#fffafc;
+}
+
+input:focus{
+    border-color:#ff9ecd;
+    box-shadow:0 0 8px rgba(255,158,205,0.4);
+}
+
+/* 💗 Small */
+.hidden{display:none;}
+.lock{
+    color:#ff5fa2;
+    font-weight:bold;
+    margin-top:10px;
+}
+
+/* 🐾 Footer */
 footer {
     position: fixed;
     bottom: 12px;
     right: 18px;
     font-size: 13px;
     font-style: italic;
-    color: #666;
-    opacity: 0.8;
+    color: #c58cff;
+    opacity: 0.9;
 }
 </style>
 </head>
@@ -56,17 +148,17 @@ footer {
 <body>
 <div class="container">
 
-<h2>🍽️ Chapati Tracker</h2>
+<h2>🍽️ Chapati Tracker 🎀</h2>
 <div id="date"></div>
 <div id="time"></div>
 
-<button class="yes" onclick="eatYes()">I will eat chapati</button>
-<button class="no" onclick="showInput()">I will NOT eat chapati</button>
+<button class="yes" onclick="eatYes()">💚 I will eat chapati</button>
+<button class="no" onclick="showInput()">💗 I will NOT eat chapati</button>
 
 <div id="nameBox" class="hidden">
-    <input type="number" id="roomInput" placeholder="Room number">
-    <input type="text" id="nameInput" placeholder="Your name">
-    <button onclick="addNotEating()">Submit</button>
+    <input type="number" id="roomInput" placeholder="🏠 Room number">
+    <input type="text" id="nameInput" placeholder="🌸 Your name">
+    <button onclick="addNotEating()">🎀 Submit</button>
 </div>
 
 <div class="sectionBox">
@@ -79,7 +171,7 @@ footer {
     <div id="notEatingRooms"></div>
 </div>
 
-<button class="admin" onclick="adminLogin()">Admin Login</button>
+<button class="admin" onclick="adminLogin()">👑 Admin Login</button>
 
 <div id="adminPanel" class="hidden">
     <h3>🥑 Admin Panel</h3>
@@ -98,8 +190,6 @@ footer {
         <b>Not Eating Names:</b>
         <div id="notEatingNames"></div>
     </div>
-
-    <!-- ❌ Total Not Eating block REMOVED -->
 
     <button class="admin" onclick="toggleHistory()">📚 View Last 7 Days History</button>
     <div id="historyPanel" class="hidden sectionBox"></div>
@@ -376,6 +466,6 @@ dailyReset();
 updateTime();
 </script>
 
-<footer>🐾Crafted with care by RM</footer>
+<footer>🐾 Crafted with care by RM 🎀</footer>
 </body>
 </html>
