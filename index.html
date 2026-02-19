@@ -143,6 +143,43 @@ footer {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-4px); }
 }
+ /* ✅ MOBILE RESPONSIVE FIXES */
+.container {
+    max-width: 95%;   /* adapt container to small screens */
+    padding: 20px;
+}
+
+/* Buttons larger on mobile */
+button {
+    font-size: 18px;
+    padding: 16px;
+}
+
+/* Inputs slightly bigger */
+input {
+    font-size: 16px;
+    padding: 14px;
+}
+
+/* Heading smaller on very small screens */
+@media (max-width: 400px) {
+    h2 {
+        font-size: 32px;
+    }
+    button {
+        font-size: 16px;
+        padding: 14px;
+    }
+    input {
+        font-size: 14px;
+        padding: 12px;
+    }
+}
+
+/* Improve spacing for readability */
+.sectionBox, #eatingRooms, #notEatingRooms {
+    line-height: 1.6;
+}
 </style>  </head>  <body>  
 <div class="container">  <h2>🍽️ Chapati Tracker </h2>  
 <div id="date"></div>  
