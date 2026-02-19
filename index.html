@@ -285,7 +285,60 @@ function toggleHistory(){
         loadHistory();
     }
 }
+function updateUI(){
+    let eatingHtml="", notEatingHtml="";
+    let total=0, notEat=0, names=[];
 
+    /* ---------- EATING (SORTED BY ROOM, NO DUPLICATES) ---------- */
+    const eat=dbData.eating||{};
+    let roomArray = [];
+
+    Object.keys(eat).forEach(id=>{
+        roomArray.push({
+            id,
+            room: eat[id].room,
+            count: eat[id].count,
+            owner: eat[id].owner
+        });
+    });
+
+    // sort room numbers
+    roomArray.sort((a,b)=>a.room-b.room);
+
+    roomArray.forEach(d=>{
+        total += d.count;
+        let btn="";
+        if(d.owner===userId){
+            btn=`<button class="editBtn" onclick="editEating('${d.id}')">✏️</button>
+                 <button class="deleteBtn" onclick="deleteEating('${d.id}')">🗑️</button>`;
+        }
+        eatingHtml += `❤️ Room ${d.room}: ${d.count} ${btn}<br>`;
+    });
+
+    /* ---------- NOT EATING (UNCHANGED) ---------- */
+    const ne=dbData.not_eating||{};
+    Object.keys(ne).forEach(id=>{
+        const d=ne[id];
+        notEat++;
+        names.push(d.name);
+        let btn="";
+        if(d.owner===userId){
+            btn=`<button class="editBtn" onclick="editNotEating('${id}')">✏️</button>
+                 <button class="deleteBtn" onclick="deleteNotEating('${id}')">🗑️</button>`;
+        }
+        notEatingHtml+=`❌ Room ${d.room} - ${d.name} ${btn}<br>`;
+    });
+
+    document.getElementById("eatingRooms").innerHTML = eatingHtml || "No entries";
+    document.getElementById("notEatingRooms").innerHTML = notEatingHtml || "No entries";
+
+    if(isAdmin){
+        document.getElementById("totalChapati").innerText=total;
+        document.getElementById("roomWise").innerHTML=eatingHtml;
+        document.getElementById("notEatingNames").innerHTML=names.join("<br>");
+        document.getElementById("totalNotEating").innerText=notEat;
+    }
+}
 function loadHistory(){
     db.ref("history").once("value").then(snap=>{
         const history=snap.val()||{};
@@ -323,45 +376,7 @@ function loadHistory(){
 }
 
 /* UI */
-function updateUI(){
-    let eatingHtml="", notEatingHtml="";
-    let total=0, notEat=0, names=[];
 
-    const eat=dbData.eating||{};
-    Object.keys(eat).forEach(id=>{
-        const d=eat[id];
-        total+=d.count;
-        let btn="";
-        if(d.owner===userId){
-            btn=`<button class="editBtn" onclick="editEating('${id}')">✏️</button>
-                 <button class="deleteBtn" onclick="deleteEating('${id}')">🗑️</button>`;
-        }
-        eatingHtml+=`❤️ Room ${d.room}: ${d.count} ${btn}<br>`;
-    });
-
-    const ne=dbData.not_eating||{};
-    Object.keys(ne).forEach(id=>{
-        const d=ne[id];
-        notEat++;
-        names.push(d.name);
-        let btn="";
-        if(d.owner===userId){
-            btn=`<button class="editBtn" onclick="editNotEating('${id}')">✏️</button>
-                 <button class="deleteBtn" onclick="deleteNotEating('${id}')">🗑️</button>`;
-        }
-        notEatingHtml+=`❌ Room ${d.room} - ${d.name} ${btn}<br>`;
-    });
-
-    document.getElementById("eatingRooms").innerHTML = eatingHtml || "No entries";
-    document.getElementById("notEatingRooms").innerHTML = notEatingHtml || "No entries";
-
-    if(isAdmin){
-        document.getElementById("totalChapati").innerText=total;
-        document.getElementById("roomWise").innerHTML=eatingHtml;
-        document.getElementById("notEatingNames").innerHTML=names.join("<br>");
-        document.getElementById("totalNotEating").innerText=notEat;
-    }
-}
 
 /* TIME */
 function updateTime(){
