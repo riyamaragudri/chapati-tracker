@@ -99,10 +99,7 @@ footer {
         <div id="notEatingNames"></div>
     </div>
 
-    <div class="sectionBox">
-        <b>Total Not Eating:</b>
-        <div id="totalNotEating"></div>
-    </div>
+    <!-- ❌ Total Not Eating block REMOVED -->
 
     <button class="admin" onclick="toggleHistory()">📚 View Last 7 Days History</button>
     <div id="historyPanel" class="hidden sectionBox"></div>
@@ -137,13 +134,13 @@ if(!userId){
 let isAdmin=false;
 const ADMIN_PASSWORD="5678";
 let dbData={};
-    function eatingRoomExists(room){
+function eatingRoomExists(room){
     const eat = dbData.eating || {};
     for(let id in eat){
         if(eat[id].room === room) return true;
     }
     return false;
-    }
+}
 
 /* ⏰ LOCK TIME 6:30 PM */
 function isLocked(){
@@ -161,25 +158,18 @@ db.ref("today").on("value",snap=>{
 
 /* ✅ DAILY RESET + HISTORY */
 function dailyReset(){
-    const todayStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const todayStr = new Date().toISOString().split("T")[0];
 
     db.ref("meta/date").once("value").then(snap=>{
         const lastDate = snap.val();
 
         if(lastDate !== todayStr){
-
-            // save yesterday
             if(dbData){
                 db.ref("history/"+lastDate).set(dbData);
             }
 
-            // reset today
             db.ref("today").set({eating:{}, not_eating:{}});
-
-            // update date
             db.ref("meta/date").set(todayStr);
-
-            // clean >7 days
             cleanOldHistory();
         }
     });
@@ -189,7 +179,7 @@ function dailyReset(){
 function cleanOldHistory(){
     db.ref("history").once("value").then(snap=>{
         const historyData = snap.val() || {};
-        const dates = Object.keys(historyData).sort(); // YYYY-MM-DD
+        const dates = Object.keys(historyData).sort();
 
         if(dates.length > 7){
             const toDelete = dates.slice(0, dates.length - 7);
@@ -211,7 +201,6 @@ function eatYes(){
 
     const roomNo = parseInt(room);
 
-    // ❗ Check only eating section
     if(eatingRoomExists(roomNo)){
         alert("❌ This room already has an eating entry.");
         return;
@@ -285,11 +274,12 @@ function toggleHistory(){
         loadHistory();
     }
 }
+
 function updateUI(){
     let eatingHtml="", notEatingHtml="";
-    let total=0, notEat=0, names=[];
+    let total=0, names=[];
 
-    /* ---------- EATING (SORTED BY ROOM, NO DUPLICATES) ---------- */
+    /* ---------- EATING ---------- */
     const eat=dbData.eating||{};
     let roomArray = [];
 
@@ -302,7 +292,6 @@ function updateUI(){
         });
     });
 
-    // sort room numbers
     roomArray.sort((a,b)=>a.room-b.room);
 
     roomArray.forEach(d=>{
@@ -315,12 +304,11 @@ function updateUI(){
         eatingHtml += `❤️ Room ${d.room}: ${d.count} ${btn}<br>`;
     });
 
-    /* ---------- NOT EATING (UNCHANGED) ---------- */
+    /* ---------- NOT EATING ---------- */
     const ne=dbData.not_eating||{};
     Object.keys(ne).forEach(id=>{
         const d=ne[id];
-        notEat++;
-        names.push(d.name);
+        names.push(`Room ${d.room} - ${d.name}`);
         let btn="";
         if(d.owner===userId){
             btn=`<button class="editBtn" onclick="editNotEating('${id}')">✏️</button>
@@ -335,10 +323,10 @@ function updateUI(){
     if(isAdmin){
         document.getElementById("totalChapati").innerText=total;
         document.getElementById("roomWise").innerHTML=eatingHtml;
-        document.getElementById("notEatingNames").innerHTML=names.join("<br>");
-        document.getElementById("totalNotEating").innerText=notEat;
+        document.getElementById("notEatingNames").innerHTML=names.join("<br>") || "None";
     }
 }
+
 function loadHistory(){
     db.ref("history").once("value").then(snap=>{
         const history=snap.val()||{};
@@ -374,9 +362,6 @@ function loadHistory(){
         document.getElementById("historyPanel").innerHTML = html || "No history";
     });
 }
-
-/* UI */
-
 
 /* TIME */
 function updateTime(){
