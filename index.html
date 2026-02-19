@@ -1,8 +1,10 @@
 <!DOCTYPE html>  <html lang="en">  
 <head>  
 <meta charset="UTF-8">  
+
 <title>Hostel Chapati Tracker</title>  <!-- Firebase -->  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&family=Tangerine:wght@400;700&display=swap" rel="stylesheet">  <style>  
-body {  
+ <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    body {  
     font-family: 'Quicksand', sans-serif;  
     background: linear-gradient(135deg,#ffd6ec,#e7d9ff,#d6f0ff);  
     padding:20px;  
@@ -124,17 +126,23 @@ input:focus{
 }  
   
 /* 🐾 Footer */  
-  
-footer {  
-    font-family: 'Tangerine', cursive;  
-    position: fixed;  
-    bottom: 12px;  
-    right: 18px;  
-    font-size: 18px;  
-    font-style: italic;  
-    color: #ff66a3; /* pastel pink */  
-    opacity: 0.9;  
-}  
+footer {
+    font-family: 'Pacifico', cursive;
+    position: fixed;
+    bottom: 10px;       /* distance from bottom */
+    right: 10px;        /* firmly at right */
+    font-size: 28px;    /* bigger size */
+    color: #ff66a3;     /* pastel pink */
+    opacity: 0.85;      /* subtle */
+    pointer-events: none; /* clicks pass through */
+    animation: subtleFloat 4s ease-in-out infinite;
+    z-index: 9999;      /* ensure it stays on top */
+}
+
+@keyframes subtleFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
 </style>  </head>  <body>  
 <div class="container">  <h2>🍽️ Chapati Tracker </h2>  
 <div id="date"></div>  
