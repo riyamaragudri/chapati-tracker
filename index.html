@@ -180,6 +180,61 @@ input {
 .sectionBox, #eatingRooms, #notEatingRooms {
     line-height: 1.6;
 }
+ /* ✅ MOBILE VERTICAL STRETCH */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    justify-content: center; /* center horizontally */
+    align-items: flex-start; /* start from top */
+    min-height: 100vh;       /* full viewport height */
+}
+
+.container {
+    max-width: 95%;
+    width: 100%;
+    min-height: 90vh;        /* take most of vertical space */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* spread content vertically */
+    padding: 20px;
+}
+
+button {
+    margin: 12px 0;
+    font-size: 18px;
+    padding: 16px;
+}
+
+input {
+    margin: 10px 0;
+    font-size: 16px;
+    padding: 14px;
+}
+
+.sectionBox {
+    margin-top: 20px;
+    padding: 16px;
+}
+
+@media (max-width: 400px) {
+    h2 {
+        font-size: 32px;
+        margin-bottom: 12px;
+    }
+    button {
+        font-size: 16px;
+        padding: 14px;
+    }
+    input {
+        font-size: 14px;
+        padding: 12px;
+    }
+}
 </style>  </head>  <body>  
 <div class="container">  <h2>🍽️ Chapati Tracker </h2>  
 <div id="date"></div>  
