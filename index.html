@@ -1,373 +1,353 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Hostel Chapati Tracker</title>
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<title>Hostel Chapati Tracker</title>  <!-- Firebase -->  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&family=Tangerine:wght@400;700&display=swap" rel="stylesheet">  <style>  
+body {  
+    font-family: 'Quicksand', sans-serif;  
+    background: linear-gradient(135deg,#ffd6ec,#e7d9ff,#d6f0ff);  
+    padding:20px;  
+}  
+  
+/* 🌸 Main Card */  
+.container {  
+    max-width:520px;  
+    margin:auto;  
+    background:rgba(255,255,255,0.92);  
+    padding:25px;  
+    border-radius:28px;  
+    box-shadow:0 10px 30px rgba(255,182,213,0.45);  
+    text-align:center;  
+    border:3px solid #ffe4f2;  
+}  
+  
+/* 🎀 Title */  
+h2{  
+    font-family:'Tangerine',cursive;  
+    font-size:38px;  
+    color:#ff7ab8;  
+    margin-bottom:8px;  
+}  
+  
+/* ⏰ Date Time */  
+#date,#time{  
+    color:#a57aff;  
+    font-size:14px;  
+    margin:2px 0;  
+}  
+  
+/* 💕 Buttons */  
+button{  
+    padding:14px;  
+    margin:8px 0;  
+    width:100%;  
+    border:none;  
+    border-radius:18px;  
+    font-size:16px;  
+    cursor:pointer;  
+    transition:0.25s;  
+    box-shadow:0 6px 12px rgba(0,0,0,0.08);  
+}  
+  
+button:hover{  
+    transform:translateY(-2px) scale(1.01);  
+}  
+  
+/* 🌷 Main Buttons */  
+.yes{  
+    background:linear-gradient(135deg,#b5f2d6,#6fe3b4);  
+    color:#1f6f5b;  
+    font-weight:600;  
+}  
+  
+.no{  
+    background:linear-gradient(135deg,#ffc0d9,#ff8fb8);  
+    color:#7a1f4a;  
+    font-weight:600;  
+}  
+  
+.admin{  
+    background:linear-gradient(135deg,#e6c9ff,#c49bff);  
+    color:#4b237a;  
+    font-weight:600;  
+}  
+  
+/* ✏️ Edit/Delete */  
+.editBtn{  
+    background:#fff1a8;  
+    font-size:12px;  
+    padding:5px 9px;  
+    border-radius:10px;  
+    margin-left:5px;  
+}  
+  
+.deleteBtn{  
+    background:#ffb3b3;  
+    font-size:12px;  
+    padding:5px 9px;  
+    border-radius:10px;  
+    margin-left:5px;  
+}  
+  
+/* 📦 Sections */  
+.sectionBox{  
+    background:linear-gradient(135deg,#fff7fb,#f4f0ff);  
+    padding:14px;  
+    border-radius:18px;  
+    margin-top:15px;  
+    text-align:left;  
+    border:1px dashed #ffcce7;  
+}  
+  
+/* ✨ Inputs */  
+input{  
+    width:100%;  
+    padding:12px;  
+    margin:6px 0;  
+    border-radius:14px;  
+    border:2px solid #ffd6ec;  
+    outline:none;  
+    font-size:14px;  
+    background:#fffafc;  
+}  
+  
+input:focus{  
+    border-color:#ff9ecd;  
+    box-shadow:0 0 8px rgba(255,158,205,0.4);  
+}  
+  
+/* 💗 Small */  
+.hidden{display:none;}  
+.lock{  
+    color:#ff5fa2;  
+    font-weight:bold;  
+    margin-top:10px;  
+}  
+  
+/* 🐾 Footer */  
+  
+footer {  
+    font-family: 'Tangerine', cursive;  
+    position: fixed;  
+    bottom: 12px;  
+    right: 18px;  
+    font-size: 18px;  
+    font-style: italic;  
+    color: #ff66a3; /* pastel pink */  
+    opacity: 0.9;  
+}  
+</style>  </head>  <body>  
+<div class="container">  <h2>🍽️ Chapati Tracker </h2>  
+<div id="date"></div>  
+<div id="time"></div>  <!-- Eating Button + Textbox -->  <button class="yes" onclick="toggleEatBox()">I will eat chapati</button>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<div id="eatBox" class="hidden">  
+    <input type="number" id="eatRoomInput" placeholder="🏠 Room number">  
+    <input type="number" id="eatCountInput" placeholder="🍽️ Count">  
+    <button onclick="addEating()">🎀 Submit</button>  
+</div>  <!-- Not Eating Button + Textbox -->  <button class="no" onclick="toggleNotEatBox()">I will NOT eat chapati</button>
 
-<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&family=Tangerine:wght@400;700&display=swap" rel="stylesheet">
+<div id="nameBox" class="hidden">  
+    <input type="number" id="roomInput" placeholder="🏠 Room number">  
+    <input type="text" id="nameInput" placeholder="🌸 Your name">  
+    <button onclick="addNotEating()">🎀 Submit</button>  
+</div>  <div class="sectionBox">  
+    <b>🍽️ Eating Entries</b>  
+    <div id="eatingRooms"></div>  
+</div>  <div class="sectionBox">  
+    <b>❌ Not Eating Entries</b>  
+    <div id="notEatingRooms"></div>  
+</div>  <!-- Admin Button + Textbox -->  <button class="admin" onclick="toggleAdminBox()">👑 Admin Login</button>
 
-<style>
-body {
-    font-family: 'Quicksand', sans-serif;
-    background: linear-gradient(135deg,#ffd6ec,#e7d9ff,#d6f0ff);
-    padding:20px;
-}
+<div id="adminBox" class="hidden">  
+    <input type="password" id="adminPassInput" placeholder="🔑 Admin Password">  
+    <button onclick="adminLoginTextBox()">🎀 Submit</button>  
+</div>  <div id="adminPanel" class="hidden">  
+    <h3>🥑 Admin Panel</h3>  
 
-/* 🌸 Main Card */
-.container {
-    max-width:520px;
-    margin:auto;
-    background:rgba(255,255,255,0.92);
-    padding:25px;
-    border-radius:28px;
-    box-shadow:0 10px 30px rgba(255,182,213,0.45);
-    text-align:center;
-    border:3px solid #ffe4f2;
-}
+    <div class="sectionBox">  
+        <b>Total Chapatis:</b>  
+        <div id="totalChapati"></div>  
+    </div>  <div class="sectionBox">  
+    <b>Room-wise:</b>  
+    <div id="roomWise"></div>  
+</div>  
 
-/* 🎀 Title */
-h2{
-    font-family:'Tangerine',cursive;
-    font-size:38px;
-    color:#ff7ab8;
-    margin-bottom:8px;
-}
+<div class="sectionBox">  
+    <b>Not Eating Names:</b>  
+    <div id="notEatingNames"></div>  
+</div>  
 
-/* ⏰ Date Time */
-#date,#time{
-    color:#a57aff;
-    font-size:14px;
-    margin:2px 0;
-}
+<button class="admin" onclick="toggleHistory()">📚 View Last 7 Days History</button>  
+<div id="historyPanel" class="hidden sectionBox"></div>
 
-/* 💕 Buttons */
-button{
-    padding:14px;
-    margin:8px 0;
-    width:100%;
-    border:none;
-    border-radius:18px;
-    font-size:16px;
-    cursor:pointer;
-    transition:0.25s;
-    box-shadow:0 6px 12px rgba(0,0,0,0.08);
-}
-
-button:hover{
-    transform:translateY(-2px) scale(1.01);
-}
-
-/* 🌷 Main Buttons */
-.yes{
-    background:linear-gradient(135deg,#b5f2d6,#6fe3b4);
-    color:#1f6f5b;
-    font-weight:600;
-}
-
-.no{
-    background:linear-gradient(135deg,#ffc0d9,#ff8fb8);
-    color:#7a1f4a;
-    font-weight:600;
-}
-
-.admin{
-    background:linear-gradient(135deg,#e6c9ff,#c49bff);
-    color:#4b237a;
-    font-weight:600;
-}
-
-/* ✏️ Edit/Delete */
-.editBtn{
-    background:#fff1a8;
-    font-size:12px;
-    padding:5px 9px;
-    border-radius:10px;
-    margin-left:5px;
-}
-
-.deleteBtn{
-    background:#ffb3b3;
-    font-size:12px;
-    padding:5px 9px;
-    border-radius:10px;
-    margin-left:5px;
-}
-
-/* 📦 Sections */
-.sectionBox{
-    background:linear-gradient(135deg,#fff7fb,#f4f0ff);
-    padding:14px;
-    border-radius:18px;
-    margin-top:15px;
-    text-align:left;
-    border:1px dashed #ffcce7;
-}
-
-/* ✨ Inputs */
-input{
-    width:100%;
-    padding:12px;
-    margin:6px 0;
-    border-radius:14px;
-    border:2px solid #ffd6ec;
-    outline:none;
-    font-size:14px;
-    background:#fffafc;
-}
-
-input:focus{
-    border-color:#ff9ecd;
-    box-shadow:0 0 8px rgba(255,158,205,0.4);
-}
-
-/* 💗 Small */
-.hidden{display:none;}
-.lock{
-    color:#ff5fa2;
-    font-weight:bold;
-    margin-top:10px;
-}
-
-/* 🐾 Footer */
-
-footer {
-    font-family: 'Tangerine', cursive;
-    position: fixed;
-    bottom: 12px;
-    right: 18px;
-    font-size: 18px;
-    font-style: italic;
-    color: #ff66a3; /* pastel pink */
-    opacity: 0.9;
-}
-</style>
-</head>
-
-<body>
-<div class="container">
-
-<h2>🍽️ Chapati Tracker </h2>
-<div id="date"></div>
-<div id="time"></div>
-
-<!-- Eating Button + Textbox -->
-<button class="yes" onclick="toggleEatBox()">I will eat chapati</button>
-<div id="eatBox" class="hidden">
-    <input type="number" id="eatRoomInput" placeholder="🏠 Room number">
-    <input type="number" id="eatCountInput" placeholder="🍽️ Count">
-    <button onclick="addEating()">🎀 Submit</button>
-</div>
-
-<!-- Not Eating Button + Textbox -->
-<button class="no" onclick="toggleNotEatBox()">I will NOT eat chapati</button>
-<div id="nameBox" class="hidden">
-    <input type="number" id="roomInput" placeholder="🏠 Room number">
-    <input type="text" id="nameInput" placeholder="🌸 Your name">
-    <button onclick="addNotEating()">🎀 Submit</button>
-</div>
-
-<div class="sectionBox">
-    <b>🍽️ Eating Entries</b>
-    <div id="eatingRooms"></div>
-</div>
-
-<div class="sectionBox">
-    <b>❌ Not Eating Entries</b>
-    <div id="notEatingRooms"></div>
-</div>
-
-<!-- Admin Button + Textbox -->
-<button class="admin" onclick="toggleAdminBox()">👑 Admin Login</button>
-<div id="adminBox" class="hidden">
-    <input type="password" id="adminPassInput" placeholder="🔑 Admin Password">
-    <button onclick="adminLoginTextBox()">🎀 Submit</button>
-</div>
-
-<div id="adminPanel" class="hidden">
-    <h3>🥑 Admin Panel</h3>
-
-    <div class="sectionBox">
-        <b>Total Chapatis:</b>
-        <div id="totalChapati"></div>
-    </div>
-
-    <div class="sectionBox">
-        <b>Room-wise:</b>
-        <div id="roomWise"></div>
-    </div>
-
-    <div class="sectionBox">
-        <b>Not Eating Names:</b>
-        <div id="notEatingNames"></div>
-    </div>
-
-    <button class="admin" onclick="toggleHistory()">📚 View Last 7 Days History</button>
-    <div id="historyPanel" class="hidden sectionBox"></div>
-</div>
-
-<div id="lockMsg" class="lock"></div>
-</div>
-
-<script>
-/* 🔥 FIREBASE CONFIG */
-const firebaseConfig = {
-  apiKey: "AIzaSyAEVSOiUNhsh_E8Oo5IcegjwqYs_MnF8ZY",
-  authDomain: "hostel-chapati-tracker.firebaseapp.com",
-  databaseURL: "https://hostel-chapati-tracker-default-rtdb.firebaseio.com",
-  projectId: "hostel-chapati-tracker",
-  storageBucket: "hostel-chapati-tracker.firebasestorage.app",
-  messagingSenderId: "1033541076858",
-  appId: "1:1033541076858:web:ad1c063a5e92c3f48678c3"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-/* USER ID */
-let userId = localStorage.getItem("chapatiUserId");
-if(!userId){
-    userId = "user_" + Math.random().toString(36).substr(2,9);
-    localStorage.setItem("chapatiUserId", userId);
-}
-
-/* GLOBAL */
-let isAdmin=false;
-const ADMIN_PASSWORD="5678";
-let dbData={};
-
-/* LOCK TIME */
-function isLocked(){
-    const now=new Date();
-    const lock=new Date();
-    lock.setHours(18,30,0);
-    return now>=lock;
-}
-
-/* Toggle Boxes */
-function toggleEatBox(){
-    document.getElementById("eatBox").classList.toggle("hidden");
-}
-function toggleNotEatBox(){
-    document.getElementById("nameBox").classList.toggle("hidden");
-}
-function toggleAdminBox(){
-    document.getElementById("adminBox").classList.toggle("hidden");
-}
-
-/* LIVE SYNC */
-db.ref("today").on("value",snap=>{
-    dbData = snap.val() || {eating:{}, not_eating:{}};
-    updateUI();
-});
-
-/* DAILY RESET */
-function dailyReset(){
-    const todayStr = new Date().toISOString().split("T")[0];
-    db.ref("meta/date").once("value").then(snap=>{
-        const lastDate = snap.val();
-        if(lastDate !== todayStr){
-            if(dbData){ db.ref("history/"+lastDate).set(dbData); }
-            db.ref("today").set({eating:{}, not_eating:{}});
-            db.ref("meta/date").set(todayStr);
-            cleanOldHistory();
-        }
-    });
-}
-
-/* CLEAN HISTORY */
-function cleanOldHistory(){
-    db.ref("history").once("value").then(snap=>{
-        const historyData = snap.val() || {};
-        const dates = Object.keys(historyData).sort();
-        if(dates.length > 7){
-            const toDelete = dates.slice(0, dates.length - 7);
-            toDelete.forEach(d=>{ db.ref("history/"+d).remove(); });
-        }
-    });
-}
-
-/* ---------- ADD DATA FUNCTIONS ---------- */
-function eatingRoomExists(room){
-    const eat = dbData.eating || {};
-    for(let id in eat){ if(eat[id].room === room) return true; }
-    return false;
-}
-
-function addEating(){
-    if(isLocked()) return alert("Time up");
-    const room = parseInt(document.getElementById("eatRoomInput").value);
-    const count = parseInt(document.getElementById("eatCountInput").value);
-    if(!room || !count) return;
-    if(eatingRoomExists(room)){ alert("❌ This room already has an eating entry."); return; }
-    db.ref("today/eating").push({room,count,owner:userId});
-    document.getElementById("eatBox").classList.add("hidden");
-}
-
-function addNotEating(){
-    const room=parseInt(document.getElementById("roomInput").value);
-    const name=document.getElementById("nameInput").value;
-    if(!room||!name) return;
-    db.ref("today/not_eating").push({room,name,owner:userId});
-    document.getElementById("nameBox").classList.add("hidden");
-}
-
-function adminLoginTextBox(){
-    const pass=document.getElementById("adminPassInput").value;
-    if(pass===ADMIN_PASSWORD){
-        isAdmin=true;
-        document.getElementById("adminPanel").classList.remove("hidden");
-        document.getElementById("adminBox").classList.add("hidden");
-        updateUI();
-    } else alert("❌ Wrong password");
-}
-
-/* EDIT / DELETE FUNCTIONS REMAIN SAME */
-function editEating(id){ const item=dbData.eating[id]; if(item.owner!==userId) return; const c=prompt("New count:",item.count); db.ref("today/eating/"+id+"/count").set(parseInt(c)); }
-function deleteEating(id){ if(dbData.eating[id].owner!==userId) return; db.ref("today/eating/"+id).remove(); }
-function editNotEating(id){ const item=dbData.not_eating[id]; if(item.owner!==userId) return; const n=prompt("New name:",item.name); db.ref("today/not_eating/"+id+"/name").set(n); }
-function deleteNotEating(id){ if(dbData.not_eating[id].owner!==userId) return; db.ref("today/not_eating/"+id).remove(); }
-
-/* HISTORY */
-function toggleHistory(){ const panel=document.getElementById("historyPanel"); panel.classList.toggle("hidden"); if(!panel.classList.contains("hidden")) loadHistory(); }
-function loadHistory(){ db.ref("history").once("value").then(snap=>{ const history=snap.val()||{}; let html=""; const dates=Object.keys(history).sort().reverse(); dates.forEach(date=>{ const day=history[date]; let chap=0, notEat=0, names=[]; if(day.eating){ Object.values(day.eating).forEach(d=>{ chap+=d.count; }); } if(day.not_eating){ Object.values(day.not_eating).forEach(d=>{ notEat++; names.push(d.name); }); } html+=`<b>📅 ${date}</b><br>🍽️ Chapatis: ${chap}<br>❌ Not Eating: ${notEat}<br>👤 Names: ${names.join(", ")||"None"}<br><hr>`; }); document.getElementById("historyPanel").innerHTML = html || "No history"; }); }
-
-/* UI UPDATE */
-function updateUI(){
-    let eatingHtml="", notEatingHtml="";
-    let total=0, names=[];
-    const eat=dbData.eating||{};
-    let roomArray=[];
-    Object.keys(eat).forEach(id=>{ roomArray.push({id,room:eat[id].room,count:eat[id].count,owner:eat[id].owner}); });
-    roomArray.sort((a,b)=>a.room-b.room);
-    roomArray.forEach(d=>{ total+=d.count; let btn=""; if(d.owner===userId){ btn=`<button class="editBtn" onclick="editEating('${d.id}')">✏️</button> <button class="deleteBtn" onclick="deleteEating('${d.id}')">🗑️</button>`; } eatingHtml += `❤️ Room ${d.room}: ${d.count} ${btn}<br>`; });
-    const ne=dbData.not_eating||{};
-    Object.keys(ne).forEach(id=>{ const d=ne[id]; names.push(`Room ${d.room} - ${d.name}`); let btn=""; if(d.owner===userId){ btn=`<button class="editBtn" onclick="editNotEating('${id}')">✏️</button> <button class="deleteBtn" onclick="deleteNotEating('${id}')">🗑️</button>`; } notEatingHtml+=`❌ Room ${d.room} - ${d.name} ${btn}<br>`; });
-    document.getElementById("eatingRooms").innerHTML = eatingHtml || "No entries";
-    document.getElementById("notEatingRooms").innerHTML = notEatingHtml || "No entries";
-    if(isAdmin){
-        document.getElementById("totalChapati").innerText=total;
-        document.getElementById("roomWise").innerHTML=eatingHtml;
-        document.getElementById("notEatingNames").innerHTML=names.join("<br>") || "None";
-    }
-}
-
-/* TIME */
-function updateTime(){
-    const n=new Date();
-    document.getElementById("date").innerText="📅 "+n.toDateString();
-    document.getElementById("time").innerText="🕒 "+n.toLocaleTimeString();
-    document.getElementById("lockMsg").innerText=isLocked()?"🔒 Closed":"✅ Open till 6:30 PM";
-}
-
-setInterval(updateTime,1000);
-dailyReset();
-    setInterval(dailyReset, 10000);
-updateTime();
-</script>
-
-<footer>🐾 Crafted with care by RM </footer>
-</body>
-</html>
+</div> <!-- RESET BUTTON (place here) -->  
+<button class="admin" onclick="manualReset()">♻️ Reset Today</button>   <div id="lockMsg" class="lock"></div>  
+</div>  <script>  
+/* 🔥 FIREBASE CONFIG */  
+const firebaseConfig = {  
+  apiKey: "AIzaSyAEVSOiUNhsh_E8Oo5IcegjwqYs_MnF8ZY",  
+  authDomain: "hostel-chapati-tracker.firebaseapp.com",  
+  databaseURL: "https://hostel-chapati-tracker-default-rtdb.firebaseio.com",  
+  projectId: "hostel-chapati-tracker",  
+  storageBucket: "hostel-chapati-tracker.firebasestorage.app",  
+  messagingSenderId: "1033541076858",  
+  appId: "1:1033541076858:web:ad1c063a5e92c3f48678c3"  
+};  
+firebase.initializeApp(firebaseConfig);  
+const db = firebase.database();  
+  
+/* USER ID */  
+let userId = localStorage.getItem("chapatiUserId");  
+if(!userId){  
+    userId = "user_" + Math.random().toString(36).substr(2,9);  
+    localStorage.setItem("chapatiUserId", userId);  
+}  
+  
+/* GLOBAL */  
+let isAdmin=false;  
+const ADMIN_PASSWORD="5678";  
+let dbData={};  
+  
+/* LOCK TIME */  
+function isLocked(){  
+    const now=new Date();  
+    const lock=new Date();  
+    lock.setHours(18,30,0);  
+    return now>=lock;  
+}  
+  
+/* Toggle Boxes */  
+function toggleEatBox(){  
+    document.getElementById("eatBox").classList.toggle("hidden");  
+}  
+function toggleNotEatBox(){  
+    document.getElementById("nameBox").classList.toggle("hidden");  
+}  
+function toggleAdminBox(){  
+    document.getElementById("adminBox").classList.toggle("hidden");  
+}  
+  
+/* LIVE SYNC */  
+db.ref("today").on("value",snap=>{  
+    dbData = snap.val() || {eating:{}, not_eating:{}};  
+    updateUI();  
+});  
+  
+/* DAILY RESET */  
+function dailyReset(){  
+    const todayStr = new Date().toISOString().split("T")[0];  
+    db.ref("meta/date").once("value").then(snap=>{  
+        const lastDate = snap.val();  
+        if(lastDate !== todayStr){  
+            if(dbData){ db.ref("history/"+lastDate).set(dbData); }  
+            db.ref("today").set({eating:{}, not_eating:{}});  
+            db.ref("meta/date").set(todayStr);  
+            cleanOldHistory();  
+        }  
+    });  
+}  
+  
+/* CLEAN HISTORY */  
+function cleanOldHistory(){  
+    db.ref("history").once("value").then(snap=>{  
+        const historyData = snap.val() || {};  
+        const dates = Object.keys(historyData).sort();  
+        if(dates.length > 7){  
+            const toDelete = dates.slice(0, dates.length - 7);  
+            toDelete.forEach(d=>{ db.ref("history/"+d).remove(); });  
+        }  
+    });  
+}  
+  
+/* ---------- ADD DATA FUNCTIONS ---------- */  
+function eatingRoomExists(room){  
+    const eat = dbData.eating || {};  
+    for(let id in eat){ if(eat[id].room === room) return true; }  
+    return false;  
+}  
+  
+function addEating(){  
+    if(isLocked()) return alert("Time up");  
+    const room = parseInt(document.getElementById("eatRoomInput").value);  
+    const count = parseInt(document.getElementById("eatCountInput").value);  
+    if(!room || !count) return;  
+    if(eatingRoomExists(room)){ alert("❌ This room already has an eating entry."); return; }  
+    db.ref("today/eating").push({room,count,owner:userId});  
+    document.getElementById("eatBox").classList.add("hidden");  
+}  
+  
+function addNotEating(){  
+    const room=parseInt(document.getElementById("roomInput").value);  
+    const name=document.getElementById("nameInput").value;  
+    if(!room||!name) return;  
+    db.ref("today/not_eating").push({room,name,owner:userId});  
+    document.getElementById("nameBox").classList.add("hidden");  
+}  
+  
+function adminLoginTextBox(){  
+    const pass=document.getElementById("adminPassInput").value;  
+    if(pass===ADMIN_PASSWORD){  
+        isAdmin=true;  
+        document.getElementById("adminPanel").classList.remove("hidden");  
+        document.getElementById("adminBox").classList.add("hidden");  
+        updateUI();  
+    } else alert("❌ Wrong password");  
+}  
+  
+/* EDIT / DELETE FUNCTIONS REMAIN SAME */  
+function editEating(id){ const item=dbData.eating[id]; if(item.owner!==userId) return; const c=prompt("New count:",item.count); db.ref("today/eating/"+id+"/count").set(parseInt(c)); }  
+function deleteEating(id){ if(dbData.eating[id].owner!==userId) return; db.ref("today/eating/"+id).remove(); }  
+function editNotEating(id){ const item=dbData.not_eating[id]; if(item.owner!==userId) return; const n=prompt("New name:",item.name); db.ref("today/not_eating/"+id+"/name").set(n); }  
+function deleteNotEating(id){ if(dbData.not_eating[id].owner!==userId) return; db.ref("today/not_eating/"+id).remove(); }  
+  
+/* HISTORY */  
+function toggleHistory(){ const panel=document.getElementById("historyPanel"); panel.classList.toggle("hidden"); if(!panel.classList.contains("hidden")) loadHistory(); }  
+function loadHistory(){ db.ref("history").once("value").then(snap=>{ const history=snap.val()||{}; let html=""; const dates=Object.keys(history).sort().reverse(); dates.forEach(date=>{ const day=history[date]; let chap=0, notEat=0, names=[]; if(day.eating){ Object.values(day.eating).forEach(d=>{ chap+=d.count; }); } if(day.not_eating){ Object.values(day.not_eating).forEach(d=>{ notEat++; names.push(d.name); }); } html+=`<b>📅 ${date}</b><br>🍽️ Chapatis: ${chap}<br>❌ Not Eating: ${notEat}<br>👤 Names: ${names.join(", ")||"None"}<br><hr>`; }); document.getElementById("historyPanel").innerHTML = html || "No history"; }); }  
+function manualReset(){  
+    if(confirm("⚠️ Are you sure you want to reset today's data?")){  
+        const todayStr = new Date().toISOString().split("T")[0];  
+        // Save today's data to history first  
+        if(dbData){  
+            db.ref("history/"+todayStr).set(dbData);  
+        }  
+        // Reset today's data  
+        db.ref("today").set({eating:{}, not_eating:{}});  
+        alert("✅ Today's data has been reset!");  
+        updateUI();  
+    }  
+}  
+/* UI UPDATE */  
+function updateUI(){  
+    let eatingHtml="", notEatingHtml="";  
+    let total=0, names=[];  
+    const eat=dbData.eating||{};  
+    let roomArray=[];  
+    Object.keys(eat).forEach(id=>{ roomArray.push({id,room:eat[id].room,count:eat[id].count,owner:eat[id].owner}); });  
+    roomArray.sort((a,b)=>a.room-b.room);  
+    roomArray.forEach(d=>{ total+=d.count; let btn=""; if(d.owner===userId){ btn=`<button class="editBtn" onclick="editEating('${d.id}')">✏️</button> <button class="deleteBtn" onclick="deleteEating('${d.id}')">🗑️</button>`; } eatingHtml += `❤️ Room ${d.room}: ${d.count} ${btn}<br>`; });  
+    const ne=dbData.not_eating||{};  
+    Object.keys(ne).forEach(id=>{ const d=ne[id]; names.push(`Room ${d.room} - ${d.name}`); let btn=""; if(d.owner===userId){ btn=`<button class="editBtn" onclick="editNotEating('${id}')">✏️</button> <button class="deleteBtn" onclick="deleteNotEating('${id}')">🗑️</button>`; } notEatingHtml+=`❌ Room ${d.room} - ${d.name} ${btn}<br>`; });  
+    document.getElementById("eatingRooms").innerHTML = eatingHtml || "No entries";  
+    document.getElementById("notEatingRooms").innerHTML = notEatingHtml || "No entries";  
+    if(isAdmin){  
+        document.getElementById("totalChapati").innerText=total;  
+        document.getElementById("roomWise").innerHTML=eatingHtml;  
+        document.getElementById("notEatingNames").innerHTML=names.join("<br>") || "None";  
+    }  
+}  
+  
+/* TIME */  
+function updateTime(){  
+    const n=new Date();  
+    document.getElementById("date").innerText="📅 "+n.toDateString();  
+    document.getElementById("time").innerText="🕒 "+n.toLocaleTimeString();  
+    document.getElementById("lockMsg").innerText=isLocked()?"🔒 Closed":"✅ Open till 6:30 PM";  
+}  
+  
+setInterval(updateTime,1000);  
+dailyReset();  
+    setInterval(dailyReset, 10000);  
+updateTime();  
+</script>  <footer>🐾 Crafted with care by RM </footer>  
+</body>  
+</html>  
