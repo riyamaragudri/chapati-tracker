@@ -191,8 +191,7 @@ footer {
     <button class="admin" onclick="toggleHistory()">📚 View Last 7 Days History</button>
     <div id="historyPanel" class="hidden sectionBox"></div>
 
-    <!-- ✅ Reset Button at bottom inside admin panel -->
-    <button class="admin" onclick="manualReset()" style="margin-top:15px;">♻️ Reset Today</button>
+    
 
     <div id="lockMsg" class="lock"></div>
 </div>  <script>  
@@ -332,19 +331,7 @@ function deleteNotEating(id){ if(dbData.not_eating[id].owner!==userId) return; d
 /* HISTORY */  
 function toggleHistory(){ const panel=document.getElementById("historyPanel"); panel.classList.toggle("hidden"); if(!panel.classList.contains("hidden")) loadHistory(); }  
 function loadHistory(){ db.ref("history").once("value").then(snap=>{ const history=snap.val()||{}; let html=""; const dates=Object.keys(history).sort().reverse(); dates.forEach(date=>{ const day=history[date]; let chap=0, notEat=0, names=[]; if(day.eating){ Object.values(day.eating).forEach(d=>{ chap+=d.count; }); } if(day.not_eating){ Object.values(day.not_eating).forEach(d=>{ notEat++; names.push(d.name); }); } html+=`<b>📅 ${date}</b><br>🍽️ Chapatis: ${chap}<br>❌ Not Eating: ${notEat}<br>👤 Names: ${names.join(", ")||"None"}<br><hr>`; }); document.getElementById("historyPanel").innerHTML = html || "No history"; }); }  
-function manualReset(){  
-    if(confirm("⚠️ Are you sure you want to reset today's data?")){  
-        const todayStr = new Date().toISOString().split("T")[0];  
-        // Save today's data to history first  
-        if(dbData){  
-            db.ref("history/"+todayStr).set(dbData);  
-        }  
-        // Reset today's data  
-        db.ref("today").set({eating:{}, not_eating:{}});  
-        alert("✅ Today's data has been reset!");  
-        updateUI();  
-    }  
-}  
+
 /* UI UPDATE */  
 function updateUI(){  
     let eatingHtml="", notEatingHtml="";  
@@ -375,7 +362,23 @@ function updateTime(){
   
 setInterval(updateTime,1000);  
 dailyReset();  
-    setInterval(dailyReset, 10000);  
+    //setInterval(dailyReset, 10000);  
+ // Run reset immediately on page load
+
+// --- Exact midnight reset ---
+function msUntilMidnight() {
+    const now = new Date();
+    const nextMidnight = new Date();
+    nextMidnight.setHours(24,0,0,0); // 12:00 AM next day
+    return nextMidnight - now; // milliseconds until next midnight
+}
+
+// Schedule first reset exactly at midnight
+setTimeout(function() {
+    dailyReset(); // reset at midnight
+    // After that, schedule daily reset every 24 hours
+    setInterval(dailyReset, 24*60*60*1000); // 24 hours in ms
+}, msUntilMidnight());
 updateTime();  
 </script>  <footer>🐾 Crafted with care by RM </footer>  
 </body>  
