@@ -248,17 +248,33 @@ db.ref("today").on("value",snap=>{
   
 /* DAILY RESET */  
 function dailyReset(){  
-    const todayStr = new Date().toISOString().split("T")[0];  
-    db.ref("meta/date").once("value").then(snap=>{  
+    const now = new Date();
+    const todayStr = now.toISOString().split("T")[0];  
+
+    db.ref("meta/date").once("value").then(snap => {  
         const lastDate = snap.val();  
+
+        // If the stored date is different from today, reset
         if(lastDate !== todayStr){  
-            if(dbData){ db.ref("history/"+lastDate).set(dbData); }  
+
+            // Only save to history if there is any data
+            if(dbData && 
+               ((dbData.eating && Object.keys(dbData.eating).length > 0) || 
+                (dbData.not_eating && Object.keys(dbData.not_eating).length > 0))) {
+                db.ref("history/" + lastDate).set(dbData);
+            }
+
+            // Reset today's data
             db.ref("today").set({eating:{}, not_eating:{}});  
+
+            // Update stored date
             db.ref("meta/date").set(todayStr);  
+
+            // Clean old history
             cleanOldHistory();  
         }  
     });  
-}  
+}
   
 /* CLEAN HISTORY */  
 function cleanOldHistory(){  
